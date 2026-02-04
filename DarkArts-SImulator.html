@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dark Arts Kickstarter Simulator</title>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Custom Styles for Range Inputs -->
+    <style>
+        /* Styles removed as we are switching to text inputs */
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        // --- ICONS (Inline to keep file self-contained) ---
+        const IconBase = ({ children, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                {children}
+            </svg>
+        );
+
+        const Package = ({ className }) => (
+            <IconBase className={className}>
+                <path d="m16.5 9.4-9-5.19M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                <line x1="12" y1="22.08" x2="12" y2="12"/>
+            </IconBase>
+        );
+
+        const DollarSign = ({ className }) => (
+            <IconBase className={className}>
+                <line x1="12" y1="1" x2="12" y2="23"/>
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </IconBase>
+        );
+
+        const Truck = ({ className }) => (
+            <IconBase className={className}>
+                <rect x="1" y="3" width="15" height="13"/>
+                <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
+                <circle cx="5.5" cy="18.5" r="2.5"/>
+                <circle cx="18.5" cy="18.5" r="2.5"/>
+            </IconBase>
+        );
+
+        const AlertTriangle = ({ className }) => (
+            <IconBase className={className}>
+                <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </IconBase>
+        );
+
+        const CheckCircle = ({ className }) => (
+            <IconBase className={className}>
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+            </IconBase>
+        );
+
+        const Info = ({ className }) => (
+            <IconBase className={className}>
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="16" x2="12" y2="12"/>
+                <line x1="12" y1="8" x2="12.01" y2="8"/>
+            </IconBase>
+        );
+
+        // --- COMPONENTS ---
+
+        const Card = ({ children, className = "" }) => (
+            <div className={`bg-white rounded-lg shadow-sm border border-slate-200 ${className}`}>
+                {children}
+            </div>
+        );
+
+        const SectionTitle = ({ icon: Icon, title }) => (
+            <div className="flex items-center space-x-2 mb-4 text-slate-800 font-semibold border-b border-slate-100 pb-2">
+                <Icon className="w-5 h-5 text-indigo-600" />
+                <h3>{title}</h3>
+            </div>
+        );
+
+        const InputGroup = ({ label, value, onChange, min = 0, step = 1, prefix = "", suffix = "" }) => (
+            <div className="mb-4">
+                <label className="block text-sm font-medium text-slate-700 mb-1">{label}</label>
+                <div className="relative rounded-md shadow-sm">
+                    {prefix && (
+                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                            <span className="text-slate-500 sm:text-sm">{prefix}</span>
+                        </div>
+                    )}
+                    <input
+                        type="number"
+                        min={min}
+                        step={step}
+                        value={value}
+                        onChange={(e) => onChange(Number(e.target.value))}
+                        className={`block w-full rounded-md border border-slate-300 py-2 bg-white text-slate-900 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${prefix ? 'pl-8' : 'pl-3'} ${suffix ? 'pr-12' : 'pr-3'}`} 
+                    />
+                    {suffix && (
+                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                            <span className="text-slate-500 sm:text-sm">{suffix}</span>
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+
+        // --- MAIN APP COMPONENT ---
+
+        function App() {
+            // --- 1. STATE (INPUT VARIABLES) ---
+            const [unitsAcolyte, setUnitsAcolyte] = useState(1000);
+            const [unitsWarlock, setUnitsWarlock] = useState(300);
+            const [unitsArchmage, setUnitsArchmage] = useState(200);
+
+            const [priceAcolyte, setPriceAcolyte] = useState(45);
+            const [priceWarlock, setPriceWarlock] = useState(65);
+            const [priceArchmage, setPriceArchmage] = useState(99);
+
+            const [shippingCharge, setShippingCharge] = useState(15);
+            
+            const [freightRate, setFreightRate] = useState(0.30);
+            const [tariffRate, setTariffRate] = useState(0.20);
+            const [fulfillmentBase, setFulfillmentBase] = useState(23.88);
+
+            // --- 2. HARDCODED COSTS ---
+            const FIXED_COSTS = {
+                loan: 3300,
+                safety: 600,
+                toolingBase: 65,
+                toolingTokens: 90,
+                toolingSleeves: 85,
+                filmMats: 150,
+                receivingPenalty: 0 // Assumed palletized
+            };
+
+            const totalFixedCosts = Object.values(FIXED_COSTS).reduce((a, b) => a + b, 0);
+
+            // --- 3. CALCULATION LOGIC ---
+            
+            // A. Component Volumes
+            const totalBaseGames = unitsAcolyte + unitsWarlock + unitsArchmage;
+            const totalMats = unitsWarlock + unitsArchmage;
+            const totalSleeves = unitsWarlock + unitsArchmage;
+            const totalBooks = unitsArchmage;
+            const totalTokens = unitsArchmage;
+
+            // B. Component Costs (Volume Breaks)
+            const costBase = 5.52;
+            const costMat = totalMats >= 1500 ? 1.56 : 1.89;
+            const costSleeve = totalSleeves >= 1500 ? 3.18 : 3.44;
+            const costBook = totalBooks >= 1500 ? 1.98 : 6.31;
+            const costToken = totalTokens >= 1500 ? 0.49 : 1.45;
+
+            // C. Mfg Cost Per Tier
+            const mfgAcolyte = costBase;
+            const mfgWarlock = costBase + costMat + costSleeve;
+            const mfgArchmage = costBase + costMat + costSleeve + costBook + costToken;
+
+            // D. Landed Cost
+            const getLanded = (mfg) => mfg * (1 + freightRate + tariffRate);
+            const landedAcolyte = getLanded(mfgAcolyte);
+            const landedWarlock = getLanded(mfgWarlock);
+            const landedArchmage = getLanded(mfgArchmage);
+
+            // E. Fulfillment Cost (Pick Fees)
+            const pickFeeExtra = 0.25;
+            const fulfillAcolyte = fulfillmentBase;
+            const fulfillWarlock = fulfillmentBase;
+            // Archmage has 5 items. Base covers 3. Extra = 2.
+            const fulfillArchmage = fulfillmentBase + (2 * pickFeeExtra);
+
+            // F. Tier Analysis Helper
+            const analyzeTier = (name, vol, price, landed, fulfill) => {
+                const revenueUnit = price + shippingCharge;
+                const totalCostUnit = landed + fulfill;
+                const profitUnit = revenueUnit - totalCostUnit;
+                
+                return {
+                name,
+                vol,
+                mfg: landed / (1 + freightRate + tariffRate),
+                landed,
+                fulfill,
+                totalCostUnit,
+                profitUnit,
+                totalRevenue: revenueUnit * vol,
+                totalCost: totalCostUnit * vol,
+                totalProfit: profitUnit * vol
+                };
+            };
+
+            const tiers = [
+                analyzeTier('Acolyte', unitsAcolyte, priceAcolyte, landedAcolyte, fulfillAcolyte),
+                analyzeTier('Warlock', unitsWarlock, priceWarlock, landedWarlock, fulfillWarlock),
+                analyzeTier('Archmage', unitsArchmage, priceArchmage, landedArchmage, fulfillArchmage),
+            ];
+
+            // G. Project Aggregates
+            const totalRevenue = tiers.reduce((acc, t) => acc + t.totalRevenue, 0);
+            const totalVariableCosts = tiers.reduce((acc, t) => acc + t.totalCost, 0);
+            const grossProfit = totalRevenue - totalVariableCosts;
+            const netProfit = grossProfit - totalFixedCosts;
+            const margin = totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0;
+
+            // Formatting Helper
+            const fmt = (num) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(num);
+
+            return (
+                <div className="min-h-screen bg-slate-50 p-6 font-sans text-slate-900">
+                <div className="max-w-6xl mx-auto">
+                    
+                    {/* Header */}
+                    <header className="mb-8 text-center sm:text-left">
+                    <h1 className="text-3xl font-bold text-slate-900 mb-2">Dark Arts Kickstarter Simulator</h1>
+                    <p className="text-slate-600">Adjust the operational levers below to model profitability scenarios.</p>
+                    </header>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    
+                    {/* LEFT COLUMN: CONTROLS */}
+                    <div className="lg:col-span-4 space-y-6">
+                        
+                        {/* Volume Inputs */}
+                        <Card className="p-5">
+                        <SectionTitle icon={Package} title="Backer Volume (Units)" />
+                        <InputGroup label="Acolyte (Base Only)" value={unitsAcolyte} onChange={setUnitsAcolyte} />
+                        <InputGroup label="Warlock (Base + Extras)" value={unitsWarlock} onChange={setUnitsWarlock} />
+                        <InputGroup label="Archmage (All-In)" value={unitsArchmage} onChange={setUnitsArchmage} />
+                        <div className="mt-4 pt-4 border-t border-slate-100 flex justify-between text-sm">
+                            <span className="text-slate-500">Total Backers:</span>
+                            <span className="font-bold">{totalBaseGames.toLocaleString()}</span>
+                        </div>
+                        </Card>
+
+                        {/* Price Inputs */}
+                        <Card className="p-5">
+                        <SectionTitle icon={DollarSign} title="Pledge Pricing" />
+                        <InputGroup label="Acolyte Price" value={priceAcolyte} onChange={setPriceAcolyte} prefix="$" />
+                        <InputGroup label="Warlock Price" value={priceWarlock} onChange={setPriceWarlock} prefix="$" />
+                        <InputGroup label="Archmage Price" value={priceArchmage} onChange={setPriceArchmage} prefix="$" />
+                        <div className="mt-2 pt-4 border-t border-slate-100">
+                            <InputGroup label="Shipping Charged to Backer" value={shippingCharge} onChange={setShippingCharge} prefix="$" />
+                        </div>
+                        </Card>
+
+                        {/* Logistics Inputs */}
+                        <Card className="p-5">
+                        <SectionTitle icon={Truck} title="Logistics Assumptions" />
+                        <InputGroup 
+                            label="Freight Rate" 
+                            value={freightRate} 
+                            onChange={(v) => setFreightRate(Number(v))} 
+                            step={0.01} 
+                            suffix={` (${(freightRate * 100).toFixed(0)}%)`}
+                        />
+                        <InputGroup 
+                            label="Tariff Rate" 
+                            value={tariffRate} 
+                            onChange={(v) => setTariffRate(Number(v))} 
+                            step={0.01} 
+                            suffix={` (${(tariffRate * 100).toFixed(0)}%)`}
+                        />
+                        <InputGroup label="Fulfillment Base Cost" value={fulfillmentBase} onChange={setFulfillmentBase} prefix="$" step={0.01} />
+                        </Card>
+
+                    </div>
+
+                    {/* RIGHT COLUMN: OUTPUTS */}
+                    <div className="lg:col-span-8 space-y-6">
+                        
+                        {/* Top Level Stats */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <Card className="p-5 bg-white border-l-4 border-l-blue-500">
+                            <div className="text-slate-500 text-sm font-medium uppercase tracking-wide">Total Revenue</div>
+                            <div className="text-2xl font-bold text-slate-800 mt-1">{fmt(totalRevenue)}</div>
+                        </Card>
+                        
+                        <Card className="p-5 bg-white border-l-4 border-l-orange-500">
+                            <div className="text-slate-500 text-sm font-medium uppercase tracking-wide">Total Costs</div>
+                            <div className="text-2xl font-bold text-slate-800 mt-1">{fmt(totalVariableCosts + totalFixedCosts)}</div>
+                            <div className="text-xs text-slate-400 mt-1">Fixed + Variable</div>
+                        </Card>
+                        
+                        <Card className={`p-5 bg-white border-l-4 ${netProfit >= 0 ? 'border-l-emerald-500' : 'border-l-red-500'}`}>
+                            <div className="text-slate-500 text-sm font-medium uppercase tracking-wide">Net Profit</div>
+                            <div className={`text-2xl font-bold mt-1 ${netProfit >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
+                            {fmt(netProfit)}
+                            </div>
+                            <div className={`text-xs font-bold mt-1 ${margin >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                            {margin.toFixed(2)}% Margin
+                            </div>
+                        </Card>
+                        </div>
+
+                        {/* Alert Banner */}
+                        {netProfit < 0 && (
+                        <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start space-x-3 text-red-800">
+                            <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                            <div>
+                            <h4 className="font-bold">Project is Losing Money</h4>
+                            <p className="text-sm mt-1">Consider increasing prices, reducing shipping subsidies, or increasing volume to hit manufacturing price breaks.</p>
+                            </div>
+                        </div>
+                        )}
+                        {netProfit > 0 && netProfit < 5000 && (
+                        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-start space-x-3 text-amber-800">
+                            <Info className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                            <div>
+                            <h4 className="font-bold">Margins are Thin</h4>
+                            <p className="text-sm mt-1">You are profitable, but risk is high. A small change in shipping rates could wipe out profits.</p>
+                            </div>
+                        </div>
+                        )}
+                        {netProfit >= 5000 && (
+                        <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 flex items-start space-x-3 text-emerald-800">
+                            <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                            <div>
+                            <h4 className="font-bold">Project is Healthy</h4>
+                            <p className="text-sm mt-1">Strong margins and profitability.</p>
+                            </div>
+                        </div>
+                        )}
+
+                        {/* Detailed Table */}
+                        <Card className="overflow-hidden">
+                        <div className="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center">
+                            <h3 className="font-bold text-slate-800">Unit Economics Breakdown</h3>
+                            <div className="text-xs text-slate-500 italic">Values per unit</div>
+                        </div>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm text-left">
+                            <thead className="bg-slate-100 text-slate-600 font-semibold uppercase text-xs">
+                                <tr>
+                                <th className="px-6 py-3">Tier</th>
+                                <th className="px-6 py-3 text-right">Vol</th>
+                                <th className="px-6 py-3 text-right">Mfg Cost</th>
+                                <th className="px-6 py-3 text-right">Landed</th>
+                                <th className="px-6 py-3 text-right">Fulfill</th>
+                                <th className="px-6 py-3 text-right">Total Cost</th>
+                                <th className="px-6 py-3 text-right">Unit Profit</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                                {tiers.map((t) => (
+                                <tr key={t.name} className="hover:bg-slate-50 transition-colors">
+                                    <td className="px-6 py-3 font-medium text-slate-900">{t.name}</td>
+                                    <td className="px-6 py-3 text-right text-slate-600">{t.vol}</td>
+                                    <td className="px-6 py-3 text-right text-slate-600">{fmt(t.mfg)}</td>
+                                    <td className="px-6 py-3 text-right text-slate-600">{fmt(t.landed)}</td>
+                                    <td className="px-6 py-3 text-right text-slate-600">{fmt(t.fulfill)}</td>
+                                    <td className="px-6 py-3 text-right text-indigo-900 font-medium">{fmt(t.totalCostUnit)}</td>
+                                    <td className={`px-6 py-3 text-right font-bold ${t.profitUnit >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                                    {fmt(t.profitUnit)}
+                                    </td>
+                                </tr>
+                                ))}
+                            </tbody>
+                            </table>
+                        </div>
+                        <div className="bg-slate-50 px-6 py-3 border-t border-slate-200 text-xs text-slate-500">
+                            * Landed includes Mfg + {(freightRate * 100).toFixed(0)}% Freight + {(tariffRate * 100).toFixed(0)}% Tariff
+                        </div>
+                        </Card>
+
+                        {/* Cost Breakdown Summary */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <Card className="p-4 bg-slate-50 border border-slate-200">
+                            <div className="text-xs font-semibold uppercase text-slate-500 mb-1">Total COGS</div>
+                            <div className="text-lg font-bold text-slate-700">{fmt(tiers.reduce((acc, t) => acc + (t.landed * t.vol), 0))}</div>
+                        </Card>
+                        <Card className="p-4 bg-slate-50 border border-slate-200">
+                            <div className="text-xs font-semibold uppercase text-slate-500 mb-1">Total Fulfillment</div>
+                            <div className="text-lg font-bold text-slate-700">{fmt(tiers.reduce((acc, t) => acc + (t.fulfill * t.vol), 0))}</div>
+                        </Card>
+                        <Card className="p-4 bg-slate-50 border border-slate-200">
+                            <div className="text-xs font-semibold uppercase text-slate-500 mb-1">Total Fixed Costs</div>
+                            <div className="text-lg font-bold text-slate-700">{fmt(totalFixedCosts)}</div>
+                        </Card>
+                        </div>
+
+                    </div>
+                    </div>
+                </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

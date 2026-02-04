@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kickstarter Logistics Simulator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.min.js"></script>
+    <style>
+        [x-cloak] { display: none !important; }
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 font-sans p-4 md:p-8">
+
+<div x-data="simulator()" x-cloak class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
+    
+    <!-- Sidebar: Inputs -->
+    <aside class="lg:col-span-4 space-y-6">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-6">
+            <h1 class="text-xl font-bold flex items-center gap-2 text-indigo-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+                Project Simulator
+            </h1>
+
+            <!-- Box Dimensions -->
+            <section class="space-y-4">
+                <h2 class="text-[11px] font-bold uppercase tracking-widest text-slate-400">Box Dimensions (mm)</h2>
+                <div class="grid grid-cols-3 gap-2">
+                    <div>
+                        <label class="text-[10px] text-slate-500 block mb-1 font-medium">Length</label>
+                        <input type="number" x-model.number="boxL" class="w-full p-2 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="text-[10px] text-slate-500 block mb-1 font-medium">Width</label>
+                        <input type="number" x-model.number="boxW" class="w-full p-2 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="text-[10px] text-slate-500 block mb-1 font-medium">Height</label>
+                        <input type="number" x-model.number="boxH" class="w-full p-2 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+                </div>
+            </section>
+
+            <!-- Campaign Stats -->
+            <section class="space-y-4">
+                <h2 class="text-[11px] font-bold uppercase tracking-widest text-slate-400">Campaign Stats</h2>
+                <div class="space-y-3">
+                    <div>
+                        <label class="text-[10px] text-slate-500 block mb-1 font-medium">Production Volume (Units)</label>
+                        <input type="number" step="100" x-model.number="qty" class="w-full p-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="text-[10px] text-slate-500 block mb-1 font-medium">Pledge Price ($)</label>
+                            <input type="number" x-model.number="pledgePrice" class="w-full p-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-slate-500 block mb-1 font-medium">Shipping ($)</label>
+                            <input type="number" x-model.number="shippingCharge" class="w-full p-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Components Toggle -->
+            <section class="space-y-4">
+                <h2 class="text-[11px] font-bold uppercase tracking-widest text-slate-400">Include Components</h2>
+                <div class="space-y-2">
+                    <template x-for="(data, name) in components" :key="name">
+                        <button 
+                            @click="toggleItem(name)"
+                            :disabled="data.required"
+                            :class="selectedItems.includes(name) ? 'border-indigo-600 bg-indigo-50 text-indigo-700 shadow-sm' : 'border-slate-200 hover:border-slate-300 bg-white'"
+                            class="w-full flex items-center justify-between p-3 rounded-xl border text-left text-sm transition-all duration-200"
+                        >
+                            <span class="flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V7M4 7c0-1.1.9-2 2-2h12c1.1 0 2 .9 2 2M4 7l8-4 8 4M12 3v18" /></svg>
+                                <span x-text="name"></span>
+                            </span>
+                            <template x-if="selectedItems.includes(name)">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                            </template>
+                        </button>
+                    </template>
+                </div>
+            </section>
+        </div>
+    </aside>
+
+    <!-- Main Dashboard -->
+    <main class="lg:col-span-8 space-y-6">
+        
+        <!-- Status Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Spatial Status -->
+            <div :class="results().isOverfilled ? 'bg-red-50 border-red-200' : 'bg-emerald-50 border-emerald-100'" class="p-6 rounded-2xl shadow-sm border-2 transition-colors">
+                <div class="flex justify-between items-start mb-2">
+                    <span :class="results().isOverfilled ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'" class="text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-tighter">
+                        Spatial Status
+                    </span>
+                </div>
+                <h3 class="text-xl font-black text-slate-800" x-text="results().isOverfilled ? 'Box Overflow' : 'Fits Comfortably'"></h3>
+                <p class="text-xs text-slate-500 mt-2 font-medium">
+                    Capacity used: <span class="text-slate-900 font-bold" x-text="results().capPercent + '%'"></span> of effective volume.
+                </p>
+            </div>
+
+            <!-- Profit Status -->
+            <div :class="results().netProjectProfit < 0 ? 'bg-rose-50 border-rose-200' : 'bg-indigo-50 border-indigo-100'" class="p-6 rounded-2xl shadow-sm border-2 transition-colors">
+                <div class="flex justify-between items-start mb-2">
+                    <span :class="results().netProjectProfit < 0 ? 'bg-rose-100 text-rose-700' : 'bg-indigo-100 text-indigo-700'" class="text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-tighter">
+                        Net Profitability
+                    </span>
+                    <div :class="results().netProjectProfit < 0 ? 'text-rose-500' : 'text-indigo-500'">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-9 9-4-4-6 6" /></svg>
+                    </div>
+                </div>
+                <h3 class="text-xl font-black text-slate-800" x-text="results().netProjectProfit < 0 ? 'Under Water' : 'Target Profit Met'"></h3>
+                <p class="text-xs text-slate-500 mt-2 font-medium">
+                    Est. Net: <span :class="results().netProjectProfit < 0 ? 'text-rose-600' : 'text-indigo-600'" class="font-bold" x-text="formatCurrency(results().netProjectProfit)"></span>
+                </p>
+            </div>
+        </div>
+
+        <!-- Warnings -->
+        <template x-if="results().warnings.length > 0">
+            <div class="bg-amber-50 border-l-4 border-amber-400 rounded-r-xl p-4 flex gap-3">
+                <div class="text-amber-500 mt-0.5">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                </div>
+                <div>
+                    <div class="text-sm font-bold text-amber-800">Production Constraints</div>
+                    <ul class="text-xs text-amber-700 mt-1 space-y-1">
+                        <template x-for="warning in results().warnings">
+                            <li x-text="'• ' + warning"></li>
+                        </template>
+                    </ul>
+                </div>
+            </div>
+        </template>
+
+        <!-- Detailed Analysis Card -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="p-6 border-b border-slate-100 bg-slate-50/50">
+                <h2 class="text-sm font-bold uppercase tracking-widest text-slate-500 flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    Analysis Breakdown
+                </h2>
+            </div>
+            
+            <div class="p-6 space-y-8">
+                <!-- Unit Metrics -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <div class="text-[10px] text-slate-400 font-bold uppercase mb-1">Unit Mfg</div>
+                        <div class="text-2xl font-black text-slate-800" x-text="'$' + results().unitMfgCost.toFixed(2)"></div>
+                    </div>
+                    <div>
+                        <div class="text-[10px] text-slate-400 font-bold uppercase mb-1">Landed (Unit)</div>
+                        <div class="text-2xl font-black text-slate-800" x-text="'$' + results().landedCost.toFixed(2)"></div>
+                    </div>
+                    <div>
+                        <div class="text-[10px] text-slate-400 font-bold uppercase mb-1">Net / Unit</div>
+                        <div :class="results().unitProfit < 0 ? 'text-rose-600' : 'text-emerald-600'" class="text-2xl font-black" x-text="'$' + results().unitProfit.toFixed(2)"></div>
+                    </div>
+                </div>
+
+                <!-- Progress Visual -->
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <h4 class="text-xs font-bold text-slate-600 uppercase">Unit Cost Distribution</h4>
+                        <span class="text-xs font-mono font-bold bg-slate-100 px-2 py-0.5 rounded text-slate-600" x-text="'$' + results().totalUnitCost.toFixed(2)"></span>
+                    </div>
+                    <div class="h-3 w-full bg-slate-100 rounded-full flex overflow-hidden shadow-inner">
+                        <div class="bg-indigo-500 h-full transition-all" :style="'width: ' + (results().unitMfgCost/results().totalUnitCost*100) + '%'"></div>
+                        <div class="bg-sky-400 h-full transition-all" :style="'width: ' + (results().freight/results.totalUnitCost*100) + '%'"></div>
+                        <div class="bg-orange-400 h-full transition-all" :style="'width: ' + (results().tariffs/results.totalUnitCost*100) + '%'"></div>
+                        <div class="bg-emerald-400 h-full transition-all" :style="'width: ' + (results().fulfillment/results().totalUnitCost*100) + '%'"></div>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        <div class="flex items-center gap-2">
+                            <div class="w-1.5 h-1.5 rounded-full bg-indigo-500"></div>
+                            <span class="text-[10px] text-slate-500 font-bold uppercase">Mfg: <span class="text-slate-800" x-text="'$' + results().unitMfgCost.toFixed(2)"></span></span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-1.5 h-1.5 rounded-full bg-sky-400"></div>
+                            <span class="text-[10px] text-slate-500 font-bold uppercase">Freight: <span class="text-slate-800" x-text="'$' + results().freight.toFixed(2)"></span></span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-1.5 h-1.5 rounded-full bg-orange-400"></div>
+                            <span class="text-[10px] text-slate-500 font-bold uppercase">Tariff: <span class="text-slate-800" x-text="'$' + results().tariffs.toFixed(2)"></span></span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
+                            <span class="text-[10px] text-slate-500 font-bold uppercase">Fulfil: <span class="text-slate-800" x-text="'$' + results().fulfillment.toFixed(2)"></span></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer Project Metrics -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                        <div class="text-[10px] text-slate-500 font-bold uppercase mb-1">Total Fixed Tooling</div>
+                        <div class="text-lg font-black text-slate-800" x-text="'$' + results().totalFixed.toLocaleString()"></div>
+                    </div>
+                    <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                        <div class="text-[10px] text-slate-500 font-bold uppercase mb-1">Total Project Variable</div>
+                        <div class="text-lg font-black text-slate-800" x-text="'$' + (results().totalUnitCost * qty).toLocaleString()"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+function simulator() {
+    return {
+        // --- DATA ---
+        components: {
+            "Base Game (Cards + Manual)": {
+                dims: [{ l: 63, w: 88, h: 46 }, { l: 150, w: 100, h: 2 }],
+                pricing: { 1500: 5.52, 3000: 4.59 },
+                required: true
+            },
+            "Playmat (Neoprene)": {
+                isCylinder: true,
+                cylinder: { l: 350, d: 60 },
+                pricing: { 500: 2.22, 1500: 1.56 },
+                required: false
+            },
+            "Sleeves (Pack)": {
+                dims: [{ l: 90, w: 65, h: 20 }],
+                pricing: { 500: 3.57, 1500: 3.18 },
+                required: false
+            },
+            "Art Book (Hardcover)": {
+                dims: [{ l: 210, w: 260, h: 5 }],
+                pricing: { 500: 6.31, 1500: 1.98 },
+                required: false
+            },
+            "Tokens (Punchboard)": {
+                dims: [{ l: 300, w: 200, h: 3 }],
+                pricing: { 500: 1.45, 1500: 0.49 },
+                required: false
+            }
+        },
+        fixedCosts: {
+            "Safety Testing": 600,
+            "Base Tooling": 66,
+            "Token Tooling": 90,
+            "Sleeve Tooling": 85,
+            "Playmat Film": 150,
+            "Loan Repayment": 3300
+        },
+
+        // --- STATE ---
+        boxL: 300,
+        boxW: 220,
+        boxH: 70,
+        qty: 1500,
+        pledgePrice: 50,
+        shippingCharge: 20,
+        selectedItems: ["Base Game (Cards + Manual)"],
+
+        // --- METHODS ---
+        toggleItem(name) {
+            if (this.components[name].required) return;
+            if (this.selectedItems.includes(name)) {
+                this.selectedItems = this.selectedItems.filter(i => i !== name);
+            } else {
+                this.selectedItems.push(name);
+            }
+        },
+
+        formatCurrency(val) {
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
+        },
+
+        results() {
+            // 1. Spatial
+            let totalCompVolume = 0;
+            let warnings = [];
+            
+            this.selectedItems.forEach(itemKey => {
+                const data = this.components[itemKey];
+                if (data.isCylinder) {
+                    const vol = Math.PI * Math.pow(data.cylinder.d / 2, 2) * data.cylinder.l;
+                    totalCompVolume += vol;
+                    if (Math.max(this.boxL, this.boxW) < data.cylinder.l) {
+                        warnings.push(`Playmat requires folding (Box < ${data.cylinder.l}mm)`);
+                    }
+                } else {
+                    data.dims.forEach(d => {
+                        totalCompVolume += (d.l * d.w * d.h);
+                    });
+                    if (itemKey === "Art Book (Hardcover)") {
+                        const canFit = (this.boxL >= 260 && this.boxW >= 210) || (this.boxL >= 210 && this.boxW >= 260);
+                        if (!canFit) warnings.push("Art Book does not fit flat.");
+                    }
+                }
+            });
+
+            const boxVolume = this.boxL * this.boxW * this.boxH || 1;
+            const efficiencyThreshold = boxVolume * 0.85;
+            const isOverfilled = totalCompVolume > efficiencyThreshold;
+            const capPercent = ((totalCompVolume / efficiencyThreshold) * 85).toFixed(1);
+
+            // 2. Financial
+            let unitMfgCost = 0;
+            this.selectedItems.forEach(itemKey => {
+                const tiers = this.components[itemKey].pricing;
+                const sortedTiers = Object.keys(tiers).map(Number).sort((a, b) => a - b);
+                let bestPrice = tiers[sortedTiers[0]];
+                for (let t of sortedTiers) {
+                    if (this.qty >= t) bestPrice = tiers[t];
+                }
+                unitMfgCost += bestPrice;
+            });
+
+            const freight = unitMfgCost * 0.30;
+            const tariffs = unitMfgCost * 0.20;
+            const landedCost = unitMfgCost + freight + tariffs;
+            const fulfillment = 21.96 + 1.92;
+            const totalUnitCost = landedCost + fulfillment;
+            const unitProfit = (this.pledgePrice + this.shippingCharge) - totalUnitCost;
+
+            let totalFixed = 0;
+            Object.entries(this.fixedCosts).forEach(([key, val]) => {
+                if (key.includes("Token") && !this.selectedItems.includes("Tokens (Punchboard)")) return;
+                if (key.includes("Sleeve") && !this.selectedItems.includes("Sleeves (Pack)")) return;
+                if (key.includes("Playmat") && !this.selectedItems.includes("Playmat (Neoprene)")) return;
+                totalFixed += val;
+            });
+
+            const netProjectProfit = (unitProfit * this.qty) - totalFixed;
+
+            return {
+                isOverfilled, warnings, capPercent,
+                unitMfgCost, landedCost, unitProfit,
+                totalUnitCost, freight, tariffs, fulfillment,
+                totalFixed, netProjectProfit
+            };
+        }
+    };
+}
+</script>
+
+</body>
+</html>

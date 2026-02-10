@@ -31,7 +31,7 @@
                         pricing: { 1500: 5.52, 3000: 4.59 },
                         required: true
                     },
-                    "Playmat (Neoprene)": {
+                    "Playmat (Rubber)": {
                         isCylinder: true,
                         cylinder: { l: 350, d: 60 },
                         pricing: { 500: 2.22, 1500: 1.56 },
@@ -144,7 +144,7 @@
                         if (key.includes("Token") && !this.selectedItems.includes("Tokens (Punchboard)")) return;
                         if (key.includes("Sleeve") && !this.selectedItems.includes("Sleeves (Pack)")) return;
                         // For playmats, check if either the primary or extra mat is selected
-                        if (key.includes("Playmat") && !this.selectedItems.includes("Playmat (Neoprene)") && !this.selectedItems.includes("Extra Playmat (2nd Player)")) return;
+                        if (key.includes("Playmat") && !this.selectedItems.includes("Playmat (Rubber)") && !this.selectedItems.includes("Extra Playmat (2nd Player)")) return;
                         totalFixed += val;
                     });
 

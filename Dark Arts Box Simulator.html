@@ -37,6 +37,12 @@
                         pricing: { 500: 2.22, 1500: 1.56 },
                         required: false
                     },
+                    "Extra Playmat (2nd Player)": {
+                        isCylinder: true,
+                        cylinder: { l: 350, d: 60 },
+                        pricing: { 500: 2.22, 1500: 1.56 },
+                        required: false
+                    },
                     "Sleeves (Pack)": {
                         dims: [{ l: 90, w: 65, h: 20 }],
                         pricing: { 500: 3.57, 1500: 3.18 },
@@ -96,7 +102,7 @@
                             const vol = Math.PI * Math.pow(data.cylinder.d / 2, 2) * data.cylinder.l;
                             totalCompVolume += vol;
                             if (Math.max(this.boxL, this.boxW) < data.cylinder.l) {
-                                warnings.push(`Playmat requires folding (Box < ${data.cylinder.l}mm)`);
+                                warnings.push(`${itemKey} requires folding (Box < ${data.cylinder.l}mm)`);
                             }
                         } else {
                             data.dims.forEach(d => {
@@ -137,7 +143,8 @@
                     Object.entries(this.fixedCosts).forEach(([key, val]) => {
                         if (key.includes("Token") && !this.selectedItems.includes("Tokens (Punchboard)")) return;
                         if (key.includes("Sleeve") && !this.selectedItems.includes("Sleeves (Pack)")) return;
-                        if (key.includes("Playmat") && !this.selectedItems.includes("Playmat (Neoprene)")) return;
+                        // For playmats, check if either the primary or extra mat is selected
+                        if (key.includes("Playmat") && !this.selectedItems.includes("Playmat (Neoprene)") && !this.selectedItems.includes("Extra Playmat (2nd Player)")) return;
                         totalFixed += val;
                     });
 

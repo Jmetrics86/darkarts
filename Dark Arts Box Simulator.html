@@ -92,7 +92,7 @@
                 },
 
                 results() {
-                    // 1. Spatial
+                    // 1. Spatial logic
                     let totalCompVolume = 0;
                     let warnings = [];
                     
@@ -120,7 +120,7 @@
                     const isOverfilled = totalCompVolume > efficiencyThreshold;
                     const capPercent = ((totalCompVolume / efficiencyThreshold) * 85).toFixed(1);
 
-                    // 2. Financial
+                    // 2. Financial logic
                     let unitMfgCost = 0;
                     this.selectedItems.forEach(itemKey => {
                         const tiers = this.components[itemKey].pricing;
@@ -136,14 +136,17 @@
                     const tariffs = unitMfgCost * 0.20;
                     const landedCost = unitMfgCost + freight + tariffs;
                     const fulfillment = 21.96 + 1.92;
-                    const totalUnitCost = landedCost + fulfillment;
-                    const unitProfit = (this.pledgePrice + this.shippingCharge) - totalUnitCost;
+                    
+                    // Kickstarter Fee (Platform 5% + Payment Processing ~5% = 10%)
+                    const ksFee = (this.pledgePrice + this.shippingCharge) * 0.10;
+                    
+                    const totalVariableCost = landedCost + fulfillment + ksFee;
+                    const unitProfit = (this.pledgePrice + this.shippingCharge) - totalVariableCost;
 
                     let totalFixed = 0;
                     Object.entries(this.fixedCosts).forEach(([key, val]) => {
                         if (key.includes("Token") && !this.selectedItems.includes("Tokens (Punchboard)")) return;
                         if (key.includes("Sleeve") && !this.selectedItems.includes("Sleeves (Pack)")) return;
-                        // For playmats, check if either the primary or extra mat is selected
                         if (key.includes("Playmat") && !this.selectedItems.includes("Playmat (Rubber)") && !this.selectedItems.includes("Extra Playmat (2nd Player)")) return;
                         totalFixed += val;
                     });
@@ -153,7 +156,7 @@
                     return {
                         isOverfilled, warnings, capPercent,
                         unitMfgCost, landedCost, unitProfit,
-                        totalUnitCost, freight, tariffs, fulfillment,
+                        totalVariableCost, freight, tariffs, fulfillment, ksFee,
                         totalFixed, netProjectProfit
                     };
                 }
@@ -305,34 +308,39 @@
             
             <div class="p-6 space-y-8">
                 <!-- Unit Metrics -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                     <div>
                         <div class="text-[10px] text-slate-400 font-bold uppercase mb-1">Unit Mfg</div>
-                        <div class="text-2xl font-black text-slate-800" x-text="'$' + results().unitMfgCost.toFixed(2)"></div>
+                        <div class="text-xl font-black text-slate-800" x-text="'$' + results().unitMfgCost.toFixed(2)"></div>
                     </div>
                     <div>
-                        <div class="text-[10px] text-slate-400 font-bold uppercase mb-1">Landed (Unit)</div>
-                        <div class="text-2xl font-black text-slate-800" x-text="'$' + results().landedCost.toFixed(2)"></div>
+                        <div class="text-[10px] text-slate-400 font-bold uppercase mb-1">Landed Cost</div>
+                        <div class="text-xl font-black text-slate-800" x-text="'$' + results().landedCost.toFixed(2)"></div>
+                    </div>
+                    <div>
+                        <div class="text-[10px] text-slate-400 font-bold uppercase mb-1">KS Fee (10%)</div>
+                        <div class="text-xl font-black text-rose-500" x-text="'$' + results().ksFee.toFixed(2)"></div>
                     </div>
                     <div>
                         <div class="text-[10px] text-slate-400 font-bold uppercase mb-1">Net / Unit</div>
-                        <div :class="results().unitProfit < 0 ? 'text-rose-600' : 'text-emerald-600'" class="text-2xl font-black" x-text="'$' + results().unitProfit.toFixed(2)"></div>
+                        <div :class="results().unitProfit < 0 ? 'text-rose-600' : 'text-emerald-600'" class="text-xl font-black" x-text="'$' + results().unitProfit.toFixed(2)"></div>
                     </div>
                 </div>
 
                 <!-- Progress Visual -->
                 <div class="space-y-4" aria-hidden="true">
                     <div class="flex justify-between items-center">
-                        <h4 class="text-xs font-bold text-slate-600 uppercase">Unit Cost Distribution</h4>
-                        <span class="text-xs font-mono font-bold bg-slate-100 px-2 py-0.5 rounded text-slate-600" x-text="'$' + results().totalUnitCost.toFixed(2)"></span>
+                        <h4 class="text-xs font-bold text-slate-600 uppercase">Variable Cost Distribution (Unit)</h4>
+                        <span class="text-xs font-mono font-bold bg-slate-100 px-2 py-0.5 rounded text-slate-600" x-text="'$' + results().totalVariableCost.toFixed(2)"></span>
                     </div>
                     <div class="h-3 w-full bg-slate-100 rounded-full flex overflow-hidden shadow-inner">
-                        <div class="bg-indigo-500 h-full transition-all" :style="'width: ' + (results().unitMfgCost/results().totalUnitCost*100) + '%'"></div>
-                        <div class="bg-sky-400 h-full transition-all" :style="'width: ' + (results().freight/results().totalUnitCost*100) + '%'"></div>
-                        <div class="bg-orange-400 h-full transition-all" :style="'width: ' + (results().tariffs/results().totalUnitCost*100) + '%'"></div>
-                        <div class="bg-emerald-400 h-full transition-all" :style="'width: ' + (results().fulfillment/results().totalUnitCost*100) + '%'"></div>
+                        <div class="bg-indigo-500 h-full transition-all" :style="'width: ' + (results().unitMfgCost/results().totalVariableCost*100) + '%'"></div>
+                        <div class="bg-sky-400 h-full transition-all" :style="'width: ' + (results().freight/results().totalVariableCost*100) + '%'"></div>
+                        <div class="bg-orange-400 h-full transition-all" :style="'width: ' + (results().tariffs/results().totalVariableCost*100) + '%'"></div>
+                        <div class="bg-emerald-400 h-full transition-all" :style="'width: ' + (results().fulfillment/results().totalVariableCost*100) + '%'"></div>
+                        <div class="bg-rose-400 h-full transition-all" :style="'width: ' + (results().ksFee/results().totalVariableCost*100) + '%'"></div>
                     </div>
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div class="grid grid-cols-2 sm:grid-cols-5 gap-4">
                         <div class="flex items-center gap-2">
                             <div class="w-1.5 h-1.5 rounded-full bg-indigo-500"></div>
                             <span class="text-[10px] text-slate-500 font-bold uppercase">Mfg: <span class="text-slate-800" x-text="'$' + results().unitMfgCost.toFixed(2)"></span></span>
@@ -349,6 +357,10 @@
                             <div class="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
                             <span class="text-[10px] text-slate-500 font-bold uppercase">Fulfil: <span class="text-slate-800" x-text="'$' + results().fulfillment.toFixed(2)"></span></span>
                         </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-1.5 h-1.5 rounded-full bg-rose-400"></div>
+                            <span class="text-[10px] text-slate-500 font-bold uppercase">KS Fee: <span class="text-slate-800" x-text="'$' + results().ksFee.toFixed(2)"></span></span>
+                        </div>
                     </div>
                 </div>
 
@@ -359,8 +371,8 @@
                         <div class="text-lg font-black text-slate-800" x-text="'$' + results().totalFixed.toLocaleString()"></div>
                     </div>
                     <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
-                        <div class="text-[10px] text-slate-500 font-bold uppercase mb-1">Total Project Variable</div>
-                        <div class="text-lg font-black text-slate-800" x-text="'$' + (results().totalUnitCost * qty).toLocaleString()"></div>
+                        <div class="text-[10px] text-slate-500 font-bold uppercase mb-1">Total Variable Cost (Project)</div>
+                        <div class="text-lg font-black text-slate-800" x-text="'$' + (results().totalVariableCost * qty).toLocaleString()"></div>
                     </div>
                 </div>
             </div>

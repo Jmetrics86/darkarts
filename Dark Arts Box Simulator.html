@@ -139,8 +139,11 @@
                     
                     // Kickstarter Fee (Platform 5% + Payment Processing ~5% = 10%)
                     const ksFee = (this.pledgePrice + this.shippingCharge) * 0.10;
+
+                    // Contingency Fee (15% buffer on Landed + Fulfillment costs)
+                    const contingencyFee = (landedCost + fulfillment) * 0.15;
                     
-                    const totalVariableCost = landedCost + fulfillment + ksFee;
+                    const totalVariableCost = landedCost + fulfillment + ksFee + contingencyFee;
                     const unitProfit = (this.pledgePrice + this.shippingCharge) - totalVariableCost;
 
                     let totalFixed = 0;
@@ -156,7 +159,7 @@
                     return {
                         isOverfilled, warnings, capPercent,
                         unitMfgCost, landedCost, unitProfit,
-                        totalVariableCost, freight, tariffs, fulfillment, ksFee,
+                        totalVariableCost, freight, tariffs, fulfillment, ksFee, contingencyFee,
                         totalFixed, netProjectProfit
                     };
                 }
@@ -308,22 +311,26 @@
             
             <div class="p-6 space-y-8">
                 <!-- Unit Metrics -->
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
                     <div>
                         <div class="text-[10px] text-slate-400 font-bold uppercase mb-1">Unit Mfg</div>
-                        <div class="text-xl font-black text-slate-800" x-text="'$' + results().unitMfgCost.toFixed(2)"></div>
+                        <div class="text-lg font-black text-slate-800" x-text="'$' + results().unitMfgCost.toFixed(2)"></div>
                     </div>
                     <div>
                         <div class="text-[10px] text-slate-400 font-bold uppercase mb-1">Landed Cost</div>
-                        <div class="text-xl font-black text-slate-800" x-text="'$' + results().landedCost.toFixed(2)"></div>
+                        <div class="text-lg font-black text-slate-800" x-text="'$' + results().landedCost.toFixed(2)"></div>
                     </div>
                     <div>
-                        <div class="text-[10px] text-slate-400 font-bold uppercase mb-1">KS Fee (10%)</div>
-                        <div class="text-xl font-black text-rose-500" x-text="'$' + results().ksFee.toFixed(2)"></div>
+                        <div class="text-[10px] text-slate-400 font-bold uppercase mb-1 text-rose-500">KS Fee (10%)</div>
+                        <div class="text-lg font-black text-rose-500" x-text="'$' + results().ksFee.toFixed(2)"></div>
+                    </div>
+                    <div>
+                        <div class="text-[10px] text-slate-400 font-bold uppercase mb-1 text-amber-600">Contingency (15%)</div>
+                        <div class="text-lg font-black text-amber-600" x-text="'$' + results().contingencyFee.toFixed(2)"></div>
                     </div>
                     <div>
                         <div class="text-[10px] text-slate-400 font-bold uppercase mb-1">Net / Unit</div>
-                        <div :class="results().unitProfit < 0 ? 'text-rose-600' : 'text-emerald-600'" class="text-xl font-black" x-text="'$' + results().unitProfit.toFixed(2)"></div>
+                        <div :class="results().unitProfit < 0 ? 'text-rose-600' : 'text-emerald-600'" class="text-lg font-black" x-text="'$' + results().unitProfit.toFixed(2)"></div>
                     </div>
                 </div>
 
@@ -339,27 +346,32 @@
                         <div class="bg-orange-400 h-full transition-all" :style="'width: ' + (results().tariffs/results().totalVariableCost*100) + '%'"></div>
                         <div class="bg-emerald-400 h-full transition-all" :style="'width: ' + (results().fulfillment/results().totalVariableCost*100) + '%'"></div>
                         <div class="bg-rose-400 h-full transition-all" :style="'width: ' + (results().ksFee/results().totalVariableCost*100) + '%'"></div>
+                        <div class="bg-amber-400 h-full transition-all" :style="'width: ' + (results().contingencyFee/results().totalVariableCost*100) + '%'"></div>
                     </div>
-                    <div class="grid grid-cols-2 sm:grid-cols-5 gap-4">
+                    <div class="grid grid-cols-2 sm:grid-cols-6 gap-2">
                         <div class="flex items-center gap-2">
                             <div class="w-1.5 h-1.5 rounded-full bg-indigo-500"></div>
-                            <span class="text-[10px] text-slate-500 font-bold uppercase">Mfg: <span class="text-slate-800" x-text="'$' + results().unitMfgCost.toFixed(2)"></span></span>
+                            <span class="text-[9px] text-slate-500 font-bold uppercase truncate">Mfg: <span class="text-slate-800" x-text="'$' + results().unitMfgCost.toFixed(2)"></span></span>
                         </div>
                         <div class="flex items-center gap-2">
                             <div class="w-1.5 h-1.5 rounded-full bg-sky-400"></div>
-                            <span class="text-[10px] text-slate-500 font-bold uppercase">Freight: <span class="text-slate-800" x-text="'$' + results().freight.toFixed(2)"></span></span>
+                            <span class="text-[9px] text-slate-500 font-bold uppercase truncate">Freight: <span class="text-slate-800" x-text="'$' + results().freight.toFixed(2)"></span></span>
                         </div>
                         <div class="flex items-center gap-2">
                             <div class="w-1.5 h-1.5 rounded-full bg-orange-400"></div>
-                            <span class="text-[10px] text-slate-500 font-bold uppercase">Tariff: <span class="text-slate-800" x-text="'$' + results().tariffs.toFixed(2)"></span></span>
+                            <span class="text-[9px] text-slate-500 font-bold uppercase truncate">Tariff: <span class="text-slate-800" x-text="'$' + results().tariffs.toFixed(2)"></span></span>
                         </div>
                         <div class="flex items-center gap-2">
                             <div class="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
-                            <span class="text-[10px] text-slate-500 font-bold uppercase">Fulfil: <span class="text-slate-800" x-text="'$' + results().fulfillment.toFixed(2)"></span></span>
+                            <span class="text-[9px] text-slate-500 font-bold uppercase truncate">Fulfil: <span class="text-slate-800" x-text="'$' + results().fulfillment.toFixed(2)"></span></span>
                         </div>
                         <div class="flex items-center gap-2">
                             <div class="w-1.5 h-1.5 rounded-full bg-rose-400"></div>
-                            <span class="text-[10px] text-slate-500 font-bold uppercase">KS Fee: <span class="text-slate-800" x-text="'$' + results().ksFee.toFixed(2)"></span></span>
+                            <span class="text-[9px] text-slate-500 font-bold uppercase truncate">KS Fee: <span class="text-slate-800" x-text="'$' + results().ksFee.toFixed(2)"></span></span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-1.5 h-1.5 rounded-full bg-amber-400"></div>
+                            <span class="text-[9px] text-slate-500 font-bold uppercase truncate">Contingency: <span class="text-slate-800" x-text="'$' + results().contingencyFee.toFixed(2)"></span></span>
                         </div>
                     </div>
                 </div>

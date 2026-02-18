@@ -197,7 +197,20 @@
                     const ksFee = (this.pledgePrice + this.shippingCharge) * 0.10;
                     const contingencyFee = (landedCost + fulfillmentTotal) * 0.15;
                     const totalVariableCost = landedCost + fulfillmentTotal + ksFee + contingencyFee;
-                    const unitProfit = (this.pledgePrice + this.shippingCharge) - totalVariableCost;
+                    
+                    // Net before tax
+                    const unitProfitPreTax = (this.pledgePrice + this.shippingCharge) - totalVariableCost;
+                    const totalFixed = 4056;
+                    const projectNetPreTax = (unitProfitPreTax * this.qty) - totalFixed;
+
+                    // Tax Reserve Logic (30.3% of profit)
+                    const taxRate = 0.303;
+                    const totalTaxReserve = projectNetPreTax > 0 ? projectNetPreTax * taxRate : 0;
+                    const finalNetProjectProfit = projectNetPreTax - totalTaxReserve;
+                    
+                    // Effective Unit Tax (Spread across units for reporting)
+                    const unitTaxReserve = projectNetPreTax > 0 ? (totalTaxReserve / this.qty) : 0;
+                    const unitProfitFinal = unitProfitPreTax - unitTaxReserve;
 
                     const boxVolume = Math.max(1, this.boxL * this.boxW * this.boxH);
                     const efficiencyThreshold = boxVolume * 0.85;
@@ -210,10 +223,12 @@
                         isOverfilled: totalCompVolume > efficiencyThreshold || stackedHeight > this.boxH,
                         warnings,
                         capPercent: ((totalCompVolume / boxVolume) * 100).toFixed(1),
-                        unitMfgCost, landedCost, unitProfit,
+                        unitMfgCost, landedCost, unitProfit: unitProfitFinal,
                         totalVariableCost, freight, tariffs, fulfillment: fulfillmentTotal, ksFee, contingencyFee,
-                        netProjectProfit: (unitProfit * this.qty) - 4056, // Adjusted to match fixed costs sum in img
-                        totalFixed: 4056,
+                        unitTaxReserve,
+                        netProjectProfit: finalNetProjectProfit,
+                        totalFixed,
+                        totalTaxReserve,
                         tiersAchieved, manifest, stackedHeight,
                         totalWeightLbs: totalWeightKg * 2.20462,
                         totalWeightKg,
@@ -243,15 +258,15 @@
                 <div class="grid grid-cols-3 gap-2">
                     <div>
                         <label class="text-[10px] text-slate-500 block mb-1">Length</label>
-                        <input type="number" x-model.number="boxL" class="w-full p-2 border rounded-lg text-sm bg-slate-50">
+                        <input type="number" x-model.number="boxL" class="w-full p-2 border rounded-lg text-sm bg-slate-50 focus:ring-2 focus:ring-indigo-500 outline-none">
                     </div>
                     <div>
                         <label class="text-[10px] text-slate-500 block mb-1">Width</label>
-                        <input type="number" x-model.number="boxW" class="w-full p-2 border rounded-lg text-sm bg-slate-50">
+                        <input type="number" x-model.number="boxW" class="w-full p-2 border rounded-lg text-sm bg-slate-50 focus:ring-2 focus:ring-indigo-500 outline-none">
                     </div>
                     <div>
                         <label class="text-[10px] text-slate-500 block mb-1">Height</label>
-                        <input type="number" x-model.number="boxH" class="w-full p-2 border rounded-lg text-sm bg-slate-50">
+                        <input type="number" x-model.number="boxH" class="w-full p-2 border rounded-lg text-sm bg-slate-50 focus:ring-2 focus:ring-indigo-500 outline-none">
                     </div>
                 </div>
             </section>
@@ -261,16 +276,16 @@
                 <div class="space-y-3">
                     <div>
                         <label class="text-[10px] text-slate-500 block mb-1">Production Volume</label>
-                        <input type="number" step="100" x-model.number="qty" class="w-full p-2 border rounded-lg text-sm">
+                        <input type="number" step="100" x-model.number="qty" class="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
                     </div>
                     <div class="grid grid-cols-2 gap-2">
                         <div>
                             <label class="text-[10px] text-slate-500 block mb-1">Pledge $</label>
-                            <input type="number" step="0.01" x-model.number="pledgePrice" class="w-full p-2 border rounded-lg text-sm">
+                            <input type="number" step="0.01" x-model.number="pledgePrice" class="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
                         </div>
                         <div>
                             <label class="text-[10px] text-slate-500 block mb-1">Shipping $</label>
-                            <input type="number" x-model.number="shippingCharge" class="w-full p-2 border rounded-lg text-sm">
+                            <input type="number" x-model.number="shippingCharge" class="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
                         </div>
                     </div>
                 </div>
@@ -281,7 +296,7 @@
                 <template x-for="(data, name) in components" :key="name">
                     <button @click="toggleItem(name)" :disabled="data.required"
                         :class="selectedItems.includes(name) ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-slate-200 bg-white'"
-                        class="w-full flex items-center justify-between p-3 rounded-xl border text-left text-sm transition-all">
+                        class="w-full flex items-center justify-between p-3 rounded-xl border text-left text-sm transition-all focus:ring-2 focus:ring-indigo-500 outline-none">
                         <span class="flex items-center gap-2">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V7M4 7c0-1.1.9-2 2-2h12c1.1 0 2 .9 2 2M4 7l8-4 8 4M12 3v18" /></svg>
                             <span x-text="name"></span>
@@ -305,25 +320,26 @@
                 <h3 class="text-xl font-black mt-2" x-text="results().isOverfilled ? 'Box Overflow' : 'Fits Comfortably'"></h3>
                 <p class="text-xs text-slate-500 mt-1">Volume used: <span class="font-bold text-slate-900" x-text="results().capPercent + '%'"></span></p>
             </div>
-            <div :class="results().unitProfit < 0 ? 'bg-rose-50 border-rose-200' : 'bg-indigo-50 border-indigo-100'" class="p-6 rounded-2xl shadow-sm border-2">
-                <span :class="results().unitProfit < 0 ? 'bg-rose-100 text-rose-700' : 'bg-indigo-100 text-indigo-700'" class="text-[10px] font-bold px-2 py-1 rounded-full uppercase">Profitability</span>
-                <h3 class="text-xl font-black mt-2" x-text="results().unitProfit < 0 ? 'Under Water' : 'Target Profit Met'"></h3>
-                <p class="text-xs text-slate-500 mt-1">Est. Net: <span class="font-bold text-slate-900" x-text="formatCurrency(results().netProjectProfit)"></span></p>
+            <div :class="results().netProjectProfit < 0 ? 'bg-rose-50 border-rose-200' : 'bg-indigo-50 border-indigo-100'" class="p-6 rounded-2xl shadow-sm border-2">
+                <span :class="results().netProjectProfit < 0 ? 'bg-rose-100 text-rose-700' : 'bg-indigo-100 text-indigo-700'" class="text-[10px] font-bold px-2 py-1 rounded-full uppercase">Take-Home Profitability</span>
+                <h3 class="text-xl font-black mt-2" x-text="results().netProjectProfit < 0 ? 'Financial Risk' : 'Target Profit Met'"></h3>
+                <p class="text-xs text-slate-500 mt-1">Take-Home Net: <span class="font-bold text-slate-900" x-text="formatCurrency(results().netProjectProfit)"></span></p>
             </div>
         </div>
 
         <!-- Breakdown -->
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-8">
-            <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
                 <template x-for="stat in [
                     ['Unit Mfg', '$' + results().unitMfgCost.toFixed(2)],
                     ['Landed Cost', '$' + results().landedCost.toFixed(2)],
                     ['KS Fee', '$' + results().ksFee.toFixed(2), 'text-rose-500'],
                     ['Contingency', '$' + results().contingencyFee.toFixed(2), 'text-amber-600'],
+                    ['Tax Reserve', '$' + results().unitTaxReserve.toFixed(2), 'text-sky-600'],
                     ['Net / Unit', '$' + results().unitProfit.toFixed(2), results().unitProfit < 0 ? 'text-rose-600' : 'text-emerald-600']
                 ]">
                     <div>
-                        <div class="text-[10px] text-slate-400 font-bold uppercase mb-1" x-text="stat[0]"></div>
+                        <div class="text-[10px] text-slate-400 font-bold uppercase mb-1 truncate" x-text="stat[0]"></div>
                         <div class="text-lg font-black" :class="stat[2]" x-text="stat[1]"></div>
                     </div>
                 </template>
@@ -331,21 +347,65 @@
 
             <div class="space-y-4">
                 <div class="flex justify-between items-center text-xs font-bold text-slate-600 uppercase">
-                    <span>Variable Cost Distribution</span>
-                    <span x-text="'Total: $' + results().totalVariableCost.toFixed(2)"></span>
+                    <span>Variable Cost Distribution (Unit)</span>
+                    <span class="bg-slate-100 px-2 py-0.5 rounded text-slate-500 font-mono" x-text="'Total Mfg & Logistics: $' + results().totalVariableCost.toFixed(2)"></span>
                 </div>
-                <div class="h-4 w-full bg-slate-100 rounded-full flex overflow-hidden">
-                    <div class="bg-indigo-500 h-full" :style="'width: ' + (results().unitMfgCost/results().totalVariableCost*100) + '%'"></div>
-                    <div class="bg-sky-400 h-full" :style="'width: ' + (results().freight/results().totalVariableCost*100) + '%'"></div>
-                    <div class="bg-orange-400 h-full" :style="'width: ' + (results().tariffs/results().totalVariableCost*100) + '%'"></div>
-                    <div class="bg-emerald-400 h-full" :style="'width: ' + (results().fulfillment/results().totalVariableCost*100) + '%'"></div>
-                    <div class="bg-rose-400 h-full" :style="'width: ' + (results().ksFee/results().totalVariableCost*100) + '%'"></div>
-                    <div class="bg-amber-400 h-full" :style="'width: ' + (results().contingencyFee/results().totalVariableCost*100) + '%'"></div>
+                <div class="h-4 w-full bg-slate-100 rounded-full flex overflow-hidden shadow-inner">
+                    <div class="bg-indigo-500 h-full transition-all" :style="'width: ' + (results().unitMfgCost/results().totalVariableCost*100) + '%'"></div>
+                    <div class="bg-sky-400 h-full transition-all" :style="'width: ' + (results().freight/results().totalVariableCost*100) + '%'"></div>
+                    <div class="bg-orange-400 h-full transition-all" :style="'width: ' + (results().tariffs/results().totalVariableCost*100) + '%'"></div>
+                    <div class="bg-emerald-400 h-full transition-all" :style="'width: ' + (results().fulfillment/results().totalVariableCost*100) + '%'"></div>
+                    <div class="bg-rose-400 h-full transition-all" :style="'width: ' + (results().ksFee/results().totalVariableCost*100) + '%'"></div>
+                    <div class="bg-amber-400 h-full transition-all" :style="'width: ' + (results().contingencyFee/results().totalVariableCost*100) + '%'"></div>
+                </div>
+                
+                <!-- Distribution Legend -->
+                <div class="flex flex-wrap gap-x-6 gap-y-2 mt-2">
+                    <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 rounded-full bg-indigo-500"></div>
+                        <span class="text-[10px] font-bold text-slate-500 uppercase">Mfg: <span class="text-slate-800" x-text="'$' + results().unitMfgCost.toFixed(2)"></span></span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 rounded-full bg-sky-400"></div>
+                        <span class="text-[10px] font-bold text-slate-500 uppercase">Freight: <span class="text-slate-800" x-text="'$' + results().freight.toFixed(2)"></span></span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 rounded-full bg-orange-400"></div>
+                        <span class="text-[10px] font-bold text-slate-500 uppercase">Tariff: <span class="text-slate-800" x-text="'$' + results().tariffs.toFixed(2)"></span></span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 rounded-full bg-emerald-400"></div>
+                        <span class="text-[10px] font-bold text-slate-500 uppercase">Fulfil: <span class="text-slate-800" x-text="'$' + results().fulfillment.toFixed(2)"></span></span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 rounded-full bg-rose-400"></div>
+                        <span class="text-[10px] font-bold text-slate-500 uppercase">KS Fee: <span class="text-slate-800" x-text="'$' + results().ksFee.toFixed(2)"></span></span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 rounded-full bg-amber-400"></div>
+                        <span class="text-[10px] font-bold text-slate-500 uppercase text-amber-600">Cont: <span class="text-slate-800" x-text="'$' + results().contingencyFee.toFixed(2)"></span></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Project Totals -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                    <div class="text-[10px] text-slate-500 font-bold uppercase mb-1">Total Fixed Costs</div>
+                    <div class="text-lg font-black text-slate-800" x-text="'$' + results().totalFixed.toLocaleString()"></div>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                    <div class="text-[10px] text-sky-600 font-bold uppercase mb-1">Tax Reserve (30.3%)</div>
+                    <div class="text-lg font-black text-sky-700" x-text="'$' + results().totalTaxReserve.toLocaleString(undefined, {maximumFractionDigits:0})"></div>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                    <div class="text-[10px] text-slate-500 font-bold uppercase mb-1">Project Variable Costs</div>
+                    <div class="text-lg font-black text-slate-800" x-text="'$' + (results().totalVariableCost * qty).toLocaleString(undefined, {maximumFractionDigits:0})"></div>
                 </div>
             </div>
         </div>
 
-        <!-- NEW: Physical Manifest & Visualization -->
+        <!-- Physical Manifest & Visualization -->
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
             <div class="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
                 <h2 class="text-xs font-bold uppercase tracking-widest text-slate-500">Physical Manifest & Fit Diagnostic</h2>
@@ -398,7 +458,6 @@
                     <div class="text-[10px] font-bold text-slate-400 uppercase mb-3">2D Box Footprint Visualization</div>
                     <div class="relative border-2 border-slate-300 bg-white shadow-inner" 
                          :style="`width: 200px; height: 200px;` ">
-                        <!-- Item blocks projected on footprint -->
                         <template x-for="item in results().manifest">
                             <div class="absolute opacity-40 border border-black/10"
                                  :style="`
@@ -422,12 +481,12 @@
 
         <!-- Footnote -->
         <div class="p-6 bg-indigo-50 border border-indigo-100 rounded-2xl">
-            <h4 class="text-sm font-bold text-indigo-900 mb-1">QML Fulfillment Analysis</h4>
+            <h4 class="text-sm font-bold text-indigo-900 mb-1">Compliance & Tax Note</h4>
             <p class="text-xs text-indigo-800 leading-relaxed">
-                Total fulfillment cost is <span class="font-bold">$23.88</span> ($21.96 Base + $1.92 Fuel). 
-                Charging <span class="font-bold" x-text="'$' + shippingCharge.toFixed(2)"></span> results in a subsidy of 
-                <span class="font-bold" x-text="formatCurrency(results().subsidy)"></span> per unit.
-                Configuration weight: <span class="font-bold" x-text="results().totalWeightLbs.toFixed(2) + ' lbs'"></span>.
+                Profit analysis now includes a <span class="font-bold">30.3% Reserve</span> for Federal Income and Self-Employment Tax. 
+                This ensures the 4-employee team is protected from individual tax liability at year-end.
+                Total fulfillment cost is <span class="font-bold">$23.88</span>; charging <span class="font-bold" x-text="'$' + shippingCharge.toFixed(2)"></span> 
+                results in a subsidy of <span class="font-bold" x-text="formatCurrency(results().subsidy)"></span> per package.
             </p>
         </div>
 

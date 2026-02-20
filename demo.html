@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Endless Seven - Tabletop Edition</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
+    <style>
+        body { margin: 0; padding: 0; overflow: hidden; background: #0a0a0f; font-family: 'Cinzel', serif; color: #e0e0e0; }
+        #ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; display: flex; flex-direction: column; justify-content: space-between; }
+        
+        .hud-top { background: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent); padding: 20px; display: flex; justify-content: space-between; pointer-events: auto; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .hud-bottom { background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); padding: 30px; display: flex; flex-direction: column; align-items: center; pointer-events: auto; }
+        
+        .alignment-panel { background: rgba(10, 10, 15, 0.8); padding: 10px 20px; border-radius: 5px; border: 1px solid #333; min-width: 150px; }
+        .light-glow { box-shadow: 0 0 15px rgba(0, 242, 255, 0.4); border-color: #00f2ff; }
+        .dark-glow { box-shadow: 0 0 15px rgba(255, 0, 68, 0.4); border-color: #ff0044; }
+
+        .phase-banner { text-align: center; margin-bottom: 15px; }
+        .phase-title { font-size: 1.8rem; letter-spacing: 6px; text-transform: uppercase; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.8); }
+        .phase-step { font-size: 0.9rem; color: #00f2ff; font-weight: bold; letter-spacing: 2px; height: 20px; transition: opacity 0.3s; text-shadow: 0 0 5px #00f2ff; }
+
+        .btn { background: #1a1a1a; color: white; border: 1px solid #555; padding: 12px 40px; cursor: pointer; font-family: inherit; transition: 0.3s; pointer-events: auto; letter-spacing: 2px; text-transform: uppercase; font-weight: bold; }
+        .btn:hover:not(:disabled) { background: #333; border-color: #00f2ff; box-shadow: 0 0 20px rgba(0,242,255,0.6); color: #00f2ff; }
+        .btn:disabled { opacity: 0.3; cursor: default; }
+
+        .widget-panel { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 15px; pointer-events: auto; background: rgba(0,0,0,0.8); padding: 15px; border-radius: 10px; border: 1px solid #444; }
+        .control-group { display: flex; flex-direction: column; align-items: center; gap: 5px; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        .control-group:last-child { border-bottom: none; }
+        .control-label { font-size: 0.6rem; color: #888; text-transform: uppercase; letter-spacing: 1px; }
+        .control-val { font-size: 0.8rem; color: #00f2ff; font-weight: bold; }
+        .zoom-btn { width: 40px; height: 40px; background: rgba(0,0,0,0.7); border: 1px solid #00f2ff; color: #00f2ff; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; border-radius: 5px; cursor: pointer; transition: 0.3s; }
+        .zoom-btn:hover { background: #00f2ff; color: #000; box-shadow: 0 0 10px #00f2ff; }
+
+        #msg-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 100; pointer-events: auto; backdrop-filter: blur(5px); }
+        
+        .seal-indicator-strip { position: absolute; top: 120px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; }
+        .seal-node { width: 12px; height: 12px; border-radius: 50%; border: 1px solid #444; background: #111; transition: 0.5s; }
+        .node-purified { background: #00f2ff; box-shadow: 0 0 10px #00f2ff; border-color: #fff; }
+        .node-corrupted { background: #ff0044; box-shadow: 0 0 10px #ff0044; border-color: #fff; }
+        .node-active { transform: scale(1.5); border-color: #fff; }
+
+        .tooltip { position: absolute; padding: 10px; background: rgba(10,10,20,0.95); border: 1px solid #00f2ff; border-radius: 4px; pointer-events: none; opacity: 0; transition: 0.2s; font-size: 0.9rem; z-index: 20; color: #fff; box-shadow: 0 0 10px rgba(0,242,255,0.3); }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div id="ui">
+        <div class="hud-top">
+            <div class="alignment-panel dark-glow">
+                <div style="color: #ff0044; font-size: 0.7rem;">PLAYER 2 (DARK)</div>
+                <div id="p2-score" style="font-size: 1.8rem">0 / 7</div>
+            </div>
+            <div style="text-align: center">
+                <div id="round-indicator" style="font-size: 1.2rem; margin-bottom: 5px;">ROUND 1</div>
+                <div id="game-status" style="font-size: 0.7rem; color: #aaa; text-transform: uppercase; letter-spacing: 1px;">Awaiting Command</div>
+            </div>
+            <div class="alignment-panel light-glow" style="text-align: right">
+                <div style="color: #00f2ff; font-size: 0.7rem;">PLAYER 1 (LIGHT)</div>
+                <div id="p1-score" style="font-size: 1.8rem">0 / 7</div>
+            </div>
+        </div>
+
+        <div class="seal-indicator-strip" id="seal-nodes">
+            <div class="seal-node"></div><div class="seal-node"></div><div class="seal-node"></div>
+            <div class="seal-node"></div><div class="seal-node"></div><div class="seal-node"></div>
+            <div class="seal-node"></div>
+        </div>
+
+        <div class="widget-panel">
+            <div class="control-group">
+                <span class="control-label">Camera Zoom</span>
+                <div style="display:flex; gap:5px">
+                    <button class="zoom-btn" onclick="zoomCamera(-5)">+</button>
+                    <button class="zoom-btn" onclick="zoomCamera(5)">−</button>
+                </div>
+            </div>
+            <div class="control-group">
+                <span class="control-label">Hand Tilt</span>
+                <span id="val-tilt" class="control-val">0.85</span>
+                <div style="display:flex; gap:5px">
+                    <button class="zoom-btn" onclick="adjustTuning('tilt', 0.05)">+</button>
+                    <button class="zoom-btn" onclick="adjustTuning('tilt', -0.05)">−</button>
+                </div>
+            </div>
+            <div class="control-group">
+                <span class="control-label">Hand Height</span>
+                <span id="val-height" class="control-val">12.0</span>
+                <div style="display:flex; gap:5px">
+                    <button class="zoom-btn" onclick="adjustTuning('height', 0.5)">↑</button>
+                    <button class="zoom-btn" onclick="adjustTuning('height', -0.5)">↓</button>
+                </div>
+            </div>
+            <div class="control-group">
+                <span class="control-label">Hand Distance</span>
+                <span id="val-dist" class="control-val">21.0</span>
+                <div style="display:flex; gap:5px">
+                    <button class="zoom-btn" onclick="adjustTuning('dist', -0.5)">Forward</button>
+                    <button class="zoom-btn" onclick="adjustTuning('dist', 0.5)">Back</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="card-tooltip" class="tooltip"></div>
+
+        <div class="hud-bottom">
+            <div class="phase-banner">
+                <div id="phase-step-label" class="phase-step"></div>
+                <div id="phase-name-label" class="phase-title">Prep Phase</div>
+            </div>
+            <div id="instruction-text" style="color: #ddd; margin-bottom: 20px; font-style: italic; min-height: 1.2rem; text-shadow: 0 1px 2px #000;"></div>
+            <button id="main-action-btn" class="btn">End Prep Phase</button>
+        </div>
+    </div>
+
+    <div id="msg-overlay">
+        <h1 id="msg-title" style="font-size: 3rem; margin: 0;"></h1>
+        <p id="msg-body" style="font-size: 1.2rem; color: #aaa; max-width: 600px; text-align: center; margin: 20px 0;"></p>
+        <button id="restart-btn" class="btn">Begin New Cycle</button>
+    </div>
+
+    <script>
+        /**
+         * ENDLESS SEVEN ENGINE
+         */
+        const SEVEN = 7;
+        const SLOT_SPACING = 3.8;
+        const CARD_W = 2.2;
+        const CARD_H = 3.2;
+        
+        let tuning = {
+            tilt: 0.85,
+            height: 12.0,
+            dist: 21.0
+        };
+
+        let scene, camera, renderer, raycaster, mouse;
+        let cameraTarget = new THREE.Vector3(0, 0, -2); 
+        
+        let seals = []; 
+        let playerBattlefield = Array(SEVEN).fill(null);
+        let enemyBattlefield = Array(SEVEN).fill(null);
+        let playerHand = [];
+        let playerLimbo = [];
+        let enemyLimbo = [];
+        
+        let currentRound = 1;
+        let currentPhase = 'PREP'; 
+        let selectedObject = null;
+        let activeSelection = null;
+        let isProcessing = false;
+
+        let playerDeckMesh, enemyDeckMesh, playerLimboMesh, enemyLimboMesh, floorMesh;
+
+        function init() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a0a0f);
+            scene.fog = new THREE.Fog(0x0a0a0f, 20, 100);
+
+            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 28, 32);
+            camera.lookAt(cameraTarget);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            document.body.appendChild(renderer.domElement);
+
+            raycaster = new THREE.Raycaster();
+            mouse = new THREE.Vector2();
+
+            setupLighting();
+            createTabletop();
+            startPrepPhase();
+
+            window.addEventListener('mousemove', onMouseMove);
+            window.addEventListener('mousedown', onMouseDown);
+            window.addEventListener('resize', onWindowResize);
+            document.getElementById('main-action-btn').addEventListener('click', handleMainAction);
+            document.getElementById('restart-btn').addEventListener('click', restartGame);
+
+            animate();
+        }
+
+        function setupLighting() {
+            const amb = new THREE.AmbientLight(0xffffff, 0.7);
+            scene.add(amb);
+            const sky = new THREE.PointLight(0x00f2ff, 1.8, 150);
+            sky.position.set(0, 30, 10);
+            scene.add(sky);
+            const rim = new THREE.DirectionalLight(0xffffff, 0.8);
+            rim.position.set(-15, 30, -15);
+            scene.add(rim);
+            const playerLight = new THREE.PointLight(0xffffff, 1.0, 60);
+            playerLight.position.set(0, 20, 25);
+            scene.add(playerLight);
+        }
+
+        function createTabletop() {
+            floorMesh = new THREE.Mesh(
+                new THREE.PlaneGeometry(400, 400),
+                new THREE.MeshPhongMaterial({ color: 0x08080c, shininess: 20 })
+            );
+            floorMesh.rotation.x = -Math.PI/2;
+            floorMesh.receiveShadow = true;
+            scene.add(floorMesh);
+
+            const startX = -(SEVEN - 1) * SLOT_SPACING / 2;
+
+            for (let i = 0; i < SEVEN; i++) {
+                const x = startX + i * SLOT_SPACING;
+                const hub = new THREE.Mesh(
+                    new THREE.CylinderGeometry(1.2, 1.25, 0.25, 6),
+                    new THREE.MeshPhongMaterial({ color: 0x222222, emissive: 0x080808 })
+                );
+                hub.position.set(x, 0.1, 0);
+                scene.add(hub);
+
+                const light = new THREE.PointLight(0xffffff, 0, 12);
+                light.position.set(x, 2, 0);
+                scene.add(light);
+
+                seals.push({ mesh: hub, light, alignment: 'NEUTRAL', champion: null, index: i });
+                createGridSlot(x, 3.2, 0x333333);  // P1 BF
+                createGridSlot(x, -3.2, 0x333333); // P2 BF
+            }
+
+            const startOriginX = -(SEVEN - 1) * SLOT_SPACING / 2;
+            const deckOffset = startOriginX - 4;
+            const limboOffset = (startOriginX + (SEVEN - 1) * SLOT_SPACING) + 4;
+
+            playerDeckMesh = createPile(deckOffset, 6, 0x0077aa);
+            playerDeckMesh.position.set(deckOffset, 0.2, 6);
+            scene.add(playerDeckMesh);
+            addLabel(playerDeckMesh, "DECK", 0x00f2ff);
+
+            enemyDeckMesh = createPile(deckOffset, -6, 0xaa2233);
+            enemyDeckMesh.position.set(deckOffset, 0.2, -6);
+            scene.add(enemyDeckMesh);
+            addLabel(enemyDeckMesh, "DECK", 0xff0044);
+
+            playerLimboMesh = createPile(limboOffset, 6, 0x444444);
+            playerLimboMesh.position.set(limboOffset, 0.05, 6);
+            scene.add(playerLimboMesh);
+            addLabel(playerLimboMesh, "LIMBO", 0xcccccc);
+
+            enemyLimboMesh = createPile(limboOffset, -6, 0x444444);
+            enemyLimboMesh.position.set(limboOffset, 0.05, -6);
+            scene.add(enemyLimboMesh);
+            addLabel(enemyLimboMesh, "LIMBO", 0xcccccc);
+        }
+
+        function createGridSlot(x, z, color) {
+            const mesh = new THREE.Mesh(
+                new THREE.PlaneGeometry(CARD_W + 0.2, CARD_H + 0.2),
+                new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.4, side: THREE.DoubleSide })
+            );
+            mesh.rotation.x = -Math.PI/2;
+            mesh.position.set(x, 0.06, z);
+            scene.add(mesh);
+        }
+
+        function createPile(x, z, color) {
+            const group = new THREE.Group();
+            const base = new THREE.Mesh(
+                new THREE.BoxGeometry(CARD_W + 0.3, 0.1, CARD_H + 0.3),
+                new THREE.MeshPhongMaterial({ color: 0x000000, transparent: true, opacity: 0.7 })
+            );
+            group.add(base);
+
+            for(let i=0; i<6; i++) {
+                const layer = new THREE.Mesh(
+                    new THREE.BoxGeometry(CARD_W, 0.05, CARD_H),
+                    new THREE.MeshPhongMaterial({ color })
+                );
+                layer.position.y = 0.05 + (i * 0.06);
+                layer.rotation.y = (Math.random() - 0.5) * 0.15;
+                group.add(layer);
+            }
+            return group;
+        }
+
+        function addLabel(parent, text, color) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256; canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 44px Cinzel';
+            ctx.textAlign = 'center';
+            ctx.fillText(text, 128, 48);
+            const tex = new THREE.CanvasTexture(canvas);
+            const label = new THREE.Mesh(
+                new THREE.PlaneGeometry(3.5, 0.85),
+                new THREE.MeshBasicMaterial({ map: tex, transparent: true, color })
+            );
+            label.rotation.x = -Math.PI/2;
+            label.position.y = 0.8;
+            parent.add(label);
+        }
+
+        function createCard(power, isChampion = false, isEnemy = false) {
+            const group = new THREE.Group();
+            const color = isEnemy ? 0x551111 : 0x113366;
+            const body = new THREE.Mesh(
+                new THREE.BoxGeometry(CARD_W, 0.1, CARD_H),
+                new THREE.MeshPhongMaterial({ color, emissive: color, emissiveIntensity: isEnemy ? 0.3 : 0.8 })
+            );
+            group.add(body);
+
+            const canvas = document.createElement('canvas');
+            canvas.width = 256; canvas.height = 384;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = isEnemy ? '#300' : '#003';
+            ctx.fillRect(0,0,256,384);
+            ctx.strokeStyle = isEnemy ? '#f66' : '#6ff';
+            ctx.lineWidth = 16;
+            ctx.strokeRect(0,0,256,384);
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 100px Cinzel';
+            ctx.textAlign = 'center';
+            ctx.shadowColor = 'rgba(0,0,0,0.8)';
+            ctx.shadowBlur = 15;
+            ctx.fillText(power, 128, 220);
+            ctx.font = 'bold 36px Cinzel';
+            ctx.fillText(isChampion ? 'CHAMPION' : 'SOLDIER', 128, 310);
+
+            const tex = new THREE.CanvasTexture(canvas);
+            const label = new THREE.Mesh(
+                new THREE.PlaneGeometry(CARD_W * 0.95, CARD_H * 0.95),
+                new THREE.MeshBasicMaterial({ map: tex, transparent: true })
+            );
+            label.rotation.x = -Math.PI/2;
+            label.position.y = 0.08;
+            group.add(label);
+
+            group.userData = { power, isChampion, isEnemy, faceUp: false };
+            return group;
+        }
+
+        async function startPrepPhase() {
+            if (isProcessing) return;
+            isProcessing = true;
+            currentPhase = 'PREP';
+            document.getElementById('phase-name-label').innerText = "Prep Phase";
+            document.getElementById('main-action-btn').disabled = true;
+            document.getElementById('main-action-btn').innerText = "Preparing...";
+            
+            updateStepLabel("Step 1: Draw Hand");
+            document.getElementById('instruction-text').innerText = "The Void yields its secrets...";
+            
+            playerHand = []; 
+            for (let i = 0; i < 8; i++) {
+                const card = createCard(Math.floor(Math.random()*8)+1, Math.random() > 0.7, false);
+                card.position.copy(playerDeckMesh.position);
+                card.position.y += 2;
+                scene.add(card);
+                playerHand.push(card);
+                
+                const total = 8;
+                const offset = (i - (total - 1) / 2);
+                const angle = offset * 0.06;
+                const tx = offset * 2.15; 
+                const tz = tuning.dist + (Math.abs(offset) * 0.3); 
+                
+                gsap.to(card.position, { x: tx, y: tuning.height, z: tz, duration: 0.6, ease: "power2.out" });
+                gsap.to(card.rotation, { x: tuning.tilt, y: angle, z: 0, duration: 0.6 });
+                await sleep(100);
+            }
+
+            await sleep(300);
+            updateStepLabel("Step 2: Shuffle Deck");
+            document.getElementById('instruction-text').innerText = "Randomizing future possibilities.";
+            await performShuffleAnimation();
+            
+            await sleep(300);
+            updateStepLabel("Step 3: Strategic Reinforcement");
+            document.getElementById('instruction-text').innerText = "Click a card in your hand, then a slot to assign.";
+            document.getElementById('main-action-btn').disabled = false;
+            document.getElementById('main-action-btn').innerText = "End Prep Phase";
+            enemyReinforce();
+            isProcessing = false;
+        }
+
+        async function performShuffleAnimation() {
+            const layers = playerDeckMesh.children.filter(c => c.type === "Mesh" && c.geometry && c.geometry.type === "BoxGeometry");
+            for(let i=0; i<4; i++) {
+                layers.forEach((l) => {
+                    gsap.to(l.position, { 
+                        x: (Math.random() - 0.5) * 1.8, 
+                        z: (Math.random() - 0.5) * 1.8, 
+                        duration: 0.15, 
+                        yoyo: true, repeat: 1 
+                    });
+                });
+                await sleep(150);
+            }
+        }
+
+        function rearrangeHand() {
+            const total = playerHand.length;
+            playerHand.forEach((card, i) => {
+                const offset = (i - (total - 1) / 2);
+                const angle = offset * 0.06;
+                const tx = offset * 2.15; 
+                const tz = tuning.dist + (Math.abs(offset) * 0.3);
+                gsap.to(card.position, { x: tx, y: tuning.height, z: tz, duration: 0.4, ease: "power2.out" });
+                gsap.to(card.rotation, { x: tuning.tilt, y: angle, z: 0, duration: 0.4 });
+            });
+        }
+
+        function enemyReinforce() {
+            for (let i = 0; i < SEVEN; i++) {
+                if (!enemyBattlefield[i] && Math.random() > 0.4) {
+                    const card = createCard(Math.floor(Math.random()*7)+1, Math.random()>0.8, true);
+                    card.position.copy(enemyDeckMesh.position);
+                    card.rotation.x = Math.PI;
+                    scene.add(card);
+                    enemyBattlefield[i] = card;
+                    gsap.to(card.position, { x: (i - 3) * SLOT_SPACING, y: 0.1, z: -3.2, duration: 0.8, delay: i*0.1 });
+                }
+            }
+        }
+
+        function handleMainAction() {
+            if (currentPhase === 'PREP' && !isProcessing) endPrep();
+        }
+
+        function endPrep() {
+            isProcessing = true;
+            updateStepLabel("Finalizing Placements...");
+            document.getElementById('instruction-text').innerText = "Purging excess units to Limbo.";
+            playerHand.forEach((card, i) => {
+                playerLimbo.push(card);
+                gsap.to(card.position, { 
+                    x: playerLimboMesh.position.x, 
+                    y: 0.2 + (playerLimbo.length * 0.05), 
+                    z: playerLimboMesh.position.z, 
+                    duration: 0.6,
+                    delay: i * 0.05,
+                    onComplete: () => { 
+                        card.rotation.set(0, 0, 0); 
+                        if (card.children[0]) card.children[0].material.emissiveIntensity = 0.3; 
+                    }
+                });
+            });
+            playerHand = [];
+            activeSelection = null;
+            setTimeout(() => { startResolution(); }, 800);
+        }
+
+        async function startResolution() {
+            currentPhase = 'RESOLUTION';
+            document.getElementById('main-action-btn').disabled = true;
+            document.getElementById('main-action-btn').innerText = "Resolving...";
+            for (let i = 0; i < SEVEN; i++) { await resolveSeal(i); }
+            checkVictory();
+            if (currentPhase !== 'GAME_OVER') {
+                currentRound++;
+                document.getElementById('round-indicator').innerText = `ROUND ${currentRound}`;
+                gsap.to(camera.position, { x: 0, y: 28, z: 32, duration: 1.5, ease: "power2.inOut" });
+                gsap.to(cameraTarget, { x: 0, y: 0, z: -2, duration: 1.5, ease: "power2.inOut" });
+                if (currentRound > 3) finalizeGame();
+                else {
+                    isProcessing = false;
+                    startPrepPhase();
+                }
+            }
+        }
+
+        async function resolveSeal(idx) {
+            const seal = seals[idx];
+            const nodes = document.querySelectorAll('.seal-node');
+            nodes.forEach(n => n.classList.remove('node-active'));
+            nodes[idx].classList.add('node-active');
+            document.getElementById('phase-name-label').innerText = `Seal ${idx + 1}`;
+            gsap.to(camera.position, { x: seal.mesh.position.x, y: 14, z: 14, duration: 1 });
+            gsap.to(cameraTarget, { x: seal.mesh.position.x, y: 0, z: 0, duration: 1 });
+            let pCard = playerBattlefield[idx];
+            let eCard = enemyBattlefield[idx];
+            
+            updateStepLabel("Step A: The Flip");
+            if (pCard) gsap.to(pCard.rotation, { x: 0, duration: 0.5 });
+            if (eCard) gsap.to(eCard.rotation, { x: 0, duration: 0.5 });
+            await sleep(800);
+
+            updateStepLabel("Step C: Battle");
+            
+            // PRIORITY 1: Champion Barrier
+            // Units must battle an opposing Champion BEFORE they can hit the other Battlefield
+            
+            // Player unit vs Enemy Champion
+            if (pCard && seal.champion && seal.champion.userData.isEnemy) {
+                const pPower = pCard.userData.power;
+                const cPower = seal.champion.userData.power;
+                if (pPower > cPower) {
+                    destroyToLimbo(seal.champion, true, idx, true);
+                    seal.champion = null;
+                } else if (pPower < cPower) {
+                    destroyToLimbo(pCard, false, idx);
+                    pCard = null; // Unit destroyed by wall
+                } else {
+                    destroyToLimbo(seal.champion, true, idx, true);
+                    destroyToLimbo(pCard, false, idx);
+                    seal.champion = null;
+                    pCard = null;
+                }
+                await sleep(500);
+            }
+
+            // Enemy unit vs Player Champion
+            if (eCard && seal.champion && !seal.champion.userData.isEnemy) {
+                const ePower = eCard.userData.power;
+                const cPower = seal.champion.userData.power;
+                if (ePower > cPower) {
+                    destroyToLimbo(seal.champion, false, idx, true);
+                    seal.champion = null;
+                } else if (ePower < cPower) {
+                    destroyToLimbo(eCard, true, idx);
+                    eCard = null; // Unit destroyed by wall
+                } else {
+                    destroyToLimbo(seal.champion, false, idx, true);
+                    destroyToLimbo(eCard, true, idx);
+                    seal.champion = null;
+                    eCard = null;
+                }
+                await sleep(500);
+            }
+
+            // PRIORITY 2: Battlefield Clash (Only for survivors of the Barrier)
+            if (pCard && eCard) {
+                const pPower = pCard.userData.power;
+                const ePower = eCard.userData.power;
+                if (pPower > ePower) {
+                    destroyToLimbo(eCard, true, idx);
+                    eCard = null;
+                    await handlePostBattleSiege(idx, pPower, true);
+                } else if (ePower > pPower) {
+                    destroyToLimbo(pCard, false, idx);
+                    pCard = null;
+                    await handlePostBattleSiege(idx, ePower, false);
+                } else {
+                    destroyToLimbo(pCard, false, idx);
+                    destroyToLimbo(eCard, true, idx);
+                    pCard = null; eCard = null;
+                }
+            } else if (pCard) {
+                // Player unit is alone on BF (might have just cleared the champion wall)
+                await handlePostBattleSiege(idx, pCard.userData.power, true);
+            } else if (eCard) {
+                // Enemy unit is alone on BF
+                await handlePostBattleSiege(idx, eCard.userData.power, false);
+            } else {
+                // No units left: Neutral check
+                await handlePostBattleSiege(idx, 0, true);
+            }
+            await sleep(600);
+
+            updateStepLabel("Step E: Ascension");
+            const survivor = (playerBattlefield[idx]) ? playerBattlefield[idx] : ((enemyBattlefield[idx]) ? enemyBattlefield[idx] : null);
+            if (survivor && survivor.userData.isChampion && !seal.champion) {
+                ascendToSeal(survivor, idx);
+            }
+            await sleep(1000);
+        }
+
+        // Logic for units that cleared the battlefield/barrier attempting to claim the seal
+        async function handlePostBattleSiege(idx, attackerPower, isPlayer) {
+            const seal = seals[idx];
+            const attacker = isPlayer ? playerBattlefield[idx] : enemyBattlefield[idx];
+            
+            // If champion still exists (unlikely given Priority 1, but for safety/ability logic)
+            if (seal.champion && seal.champion.userData.isEnemy === isPlayer) {
+                const champPower = seal.champion.userData.power;
+                if (attackerPower > champPower) {
+                    destroyToLimbo(seal.champion, !isPlayer, idx, true);
+                    seal.champion = null;
+                    claimSeal(idx, isPlayer ? 'PURIFIED' : 'CORRUPTED');
+                } else if (attackerPower < champPower) {
+                    if (attacker) destroyToLimbo(attacker, !isPlayer, idx);
+                } else if (attackerPower === champPower && attackerPower > 0) {
+                    destroyToLimbo(seal.champion, !isPlayer, idx, true);
+                    if (attacker) destroyToLimbo(attacker, !isPlayer, idx);
+                    seal.champion = null;
+                    claimSeal(idx, 'NEUTRAL');
+                }
+            } else if (!seal.champion && attackerPower > 0) {
+                claimSeal(idx, isPlayer ? 'PURIFIED' : 'CORRUPTED');
+            }
+        }
+
+        function destroyToLimbo(card, isEnemy, idx, isChamp = false) {
+            const limboPile = isEnemy ? enemyLimbo : playerLimbo;
+            const limboMesh = isEnemy ? enemyLimboMesh : playerLimboMesh;
+            limboPile.push(card);
+            
+            if (isChamp) {
+                // Ref handled in resolveSeal logic
+            } else {
+                if (isEnemy) enemyBattlefield[idx] = null; 
+                else playerBattlefield[idx] = null;
+            }
+
+            gsap.to(card.position, { 
+                x: limboMesh.position.x + (Math.random()-0.5), 
+                y: 0.2 + (limboPile.length * 0.05), 
+                z: limboMesh.position.z + (Math.random()-0.5), 
+                duration: 0.8, ease: "power2.inOut"
+            });
+            gsap.to(card.rotation, { x: 0, y: Math.random() * 0.5, z: 0, duration: 0.8 });
+            if (card.children[0]) card.children[0].material.emissiveIntensity = 0.3;
+        }
+
+        function claimSeal(idx, status) {
+            const seal = seals[idx];
+            seal.alignment = status;
+            let color = 0x080808; 
+            if (status === 'PURIFIED') color = 0x00f2ff;
+            if (status === 'CORRUPTED') color = 0xff0044;
+            
+            seal.mesh.material.emissive.setHex(color);
+            seal.mesh.material.emissiveIntensity = status === 'NEUTRAL' ? 0.1 : 0.8;
+            seal.light.color.setHex(color);
+            seal.light.intensity = status === 'NEUTRAL' ? 0 : 3.5;
+            
+            const nodes = document.querySelectorAll('.seal-node');
+            nodes[idx].className = 'seal-node ' + 
+                (status === 'PURIFIED' ? 'node-purified' : (status === 'CORRUPTED' ? 'node-corrupted' : ''));
+            updateGlobalScores();
+        }
+
+        function ascendToSeal(card, idx) {
+            if (card.userData.isEnemy) enemyBattlefield[idx] = null; else playerBattlefield[idx] = null;
+            seals[idx].champion = card;
+            gsap.to(card.position, { x: seals[idx].mesh.position.x, y: 0.6, z: 0, duration: 0.6, ease: "back.out" });
+            if (card.children[0]) card.children[0].material.emissiveIntensity = 1.0;
+        }
+
+        function zoomCamera(val) {
+            gsap.to(camera.position, { y: camera.position.y + (val * 0.7), z: camera.position.z + val, duration: 0.5, ease: "power2.out" });
+        }
+
+        function adjustTuning(key, delta) {
+            tuning[key] = parseFloat((tuning[key] + delta).toFixed(2));
+            document.getElementById(`val-${key}`).innerText = tuning[key];
+            rearrangeHand();
+        }
+
+        function restartGame() {
+            document.getElementById('msg-overlay').style.display = 'none';
+            [...playerHand, ...playerLimbo, ...enemyLimbo, ...playerBattlefield, ...enemyBattlefield].forEach(card => {
+                if (card) scene.remove(card);
+            });
+            seals.forEach(seal => {
+                if (seal.champion) scene.remove(seal.champion);
+                seal.champion = null;
+                seal.alignment = 'NEUTRAL';
+                seal.mesh.material.emissive.setHex(0x080808);
+                seal.light.intensity = 0;
+            });
+            document.querySelectorAll('.seal-node').forEach(node => node.className = 'seal-node');
+            playerBattlefield = Array(SEVEN).fill(null);
+            enemyBattlefield = Array(SEVEN).fill(null);
+            playerHand = [];
+            playerLimbo = [];
+            enemyLimbo = [];
+            currentRound = 1;
+            document.getElementById('round-indicator').innerText = `ROUND 1`;
+            document.getElementById('p1-score').innerText = `0 / 7`;
+            document.getElementById('p2-score').innerText = `0 / 7`;
+            gsap.to(camera.position, { x: 0, y: 28, z: 32, duration: 1.5 });
+            cameraTarget.set(0, 0, -2);
+            isProcessing = false;
+            startPrepPhase();
+        }
+
+        function onMouseMove(event) {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(playerHand, true);
+            const tooltip = document.getElementById('card-tooltip');
+            if (intersects.length > 0) {
+                let card = intersects[0].object;
+                while (card.parent && !playerHand.includes(card)) card = card.parent;
+                if (selectedObject !== card) {
+                    if (selectedObject && playerHand.includes(selectedObject)) gsap.to(selectedObject.position, { y: tuning.height, duration: 0.2 });
+                    selectedObject = card;
+                    gsap.to(card.position, { y: tuning.height + 1.5, duration: 0.2 });
+                    tooltip.style.opacity = 1; tooltip.style.left = event.clientX + 20 + 'px'; tooltip.style.top = event.clientY - 40 + 'px';
+                    tooltip.innerHTML = `<strong>${card.userData.power} POWER</strong><br>${card.userData.isChampion ? 'CHAMPION' : 'SOLDIER'}`;
+                }
+            } else {
+                if (selectedObject && playerHand.includes(selectedObject)) gsap.to(selectedObject.position, { y: tuning.height, duration: 0.2 });
+                selectedObject = null; tooltip.style.opacity = 0;
+            }
+        }
+
+        function onMouseDown() {
+            if (currentPhase !== 'PREP' || isProcessing) return;
+            raycaster.setFromCamera(mouse, camera);
+            const handIntersects = raycaster.intersectObjects(playerHand, true);
+            if (handIntersects.length > 0) {
+                let card = handIntersects[0].object;
+                while (card.parent && !playerHand.includes(card)) card = card.parent;
+                if (activeSelection && activeSelection.children[0]) activeSelection.children[0].material.emissiveIntensity = 0.8;
+                activeSelection = card;
+                if (activeSelection.children[0]) activeSelection.children[0].material.emissiveIntensity = 2.5;
+                return;
+            }
+            if (activeSelection) {
+                const tableIntersects = raycaster.intersectObjects([floorMesh]);
+                if (tableIntersects.length > 0) {
+                    const intersect = tableIntersects[0];
+                    if (intersect.point.z > 0.5 && intersect.point.z < 7.0) {
+                        const startX = -(SEVEN - 1) * SLOT_SPACING / 2;
+                        const idx = Math.round((intersect.point.x - startX) / SLOT_SPACING);
+                        if (idx >= 0 && idx < SEVEN && !playerBattlefield[idx]) {
+                            const card = activeSelection;
+                            playerHand = playerHand.filter(c => c !== card);
+                            playerBattlefield[idx] = card;
+                            gsap.to(card.position, { x: (idx - 3) * SLOT_SPACING, y: 0.1, z: 3.2, duration: 0.5, ease: "power2.inOut" });
+                            gsap.to(card.rotation, { x: Math.PI, y: 0, z: 0, duration: 0.5 });
+                            if (card.children[0]) card.children[0].material.emissiveIntensity = 0.4;
+                            activeSelection = null;
+                            rearrangeHand();
+                        }
+                    }
+                }
+            }
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+        function updateStepLabel(txt) {
+            const el = document.getElementById('phase-step-label');
+            el.style.opacity = 0; setTimeout(() => { el.innerText = txt; el.style.opacity = 1; }, 200);
+        }
+
+        function updateGlobalScores() {
+            const p1 = seals.filter(s => s.alignment === 'PURIFIED').length;
+            const p2 = seals.filter(s => s.alignment === 'CORRUPTED').length;
+            document.getElementById('p1-score').innerText = `${p1} / 7`;
+            document.getElementById('p2-score').innerText = `${p2} / 7`;
+        }
+
+        function checkVictory() {
+            const p1 = seals.filter(s => s.alignment === 'PURIFIED').length;
+            const p2 = seals.filter(s => s.alignment === 'CORRUPTED').length;
+            if (p1 === 7 || p2 === 7) showGameOver(p1 === 7 ? "THE GREAT ASCENSION" : "THE FINAL ECLIPSE", p1 === 7 ? "Utopia established. The Light prevails." : "The Void consumes all.");
+        }
+
+        function finalizeGame() {
+            const p1 = seals.filter(s => s.alignment === 'PURIFIED').length;
+            const p2 = seals.filter(s => s.alignment === 'CORRUPTED').length;
+            showGameOver("CYCLE COMPLETE", p1 > p2 ? "Player 1 (Light) controls the majority." : "Player 2 (Dark) controls the majority.");
+        }
+
+        function showGameOver(title, body) {
+            currentPhase = 'GAME_OVER';
+            document.getElementById('msg-overlay').style.display = 'flex';
+            document.getElementById('msg-title').innerText = title;
+            document.getElementById('msg-body').innerText = body;
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            if (camera && cameraTarget) camera.lookAt(cameraTarget);
+            const time = Date.now() * 0.001;
+            if (currentPhase === 'PREP') {
+                playerHand.forEach(card => {
+                    if (card && card.children && card.children[0]) {
+                        const bodyMesh = card.children[0];
+                        if (bodyMesh.material && card !== activeSelection) {
+                            bodyMesh.material.emissiveIntensity = 0.8 + Math.sin(time * 6) * 0.4;
+                        }
+                    }
+                });
+            }
+            if (renderer && scene && camera) renderer.render(scene, camera);
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>

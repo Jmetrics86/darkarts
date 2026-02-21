@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Endless Seven - Deck Manifest Edition</title>
+    <title>Endless Seven - Counter Management Edition</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
     <style>
@@ -67,6 +67,27 @@
             line-height: 1.4;
         }
         .deck-counter { font-size: 0.6rem; color: #aaa; margin-top: 5px; letter-spacing: 1px; }
+
+        /* Counter Selection UI */
+        #counter-overlay {
+            position: absolute;
+            top: 200px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.9);
+            border: 2px solid #00f2ff;
+            padding: 20px;
+            text-align: center;
+            display: none;
+            pointer-events: auto;
+            z-index: 50;
+            min-width: 300px;
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(0, 242, 255, 0.5);
+        }
+        .counter-pool-item { display: inline-block; margin: 10px; padding: 10px; border: 1px solid #444; border-radius: 5px; }
+        .power-marker-text { color: #00f2ff; font-weight: bold; font-size: 1.2rem; }
+        .weakness-marker-text { color: #ff0044; font-weight: bold; font-size: 1.2rem; }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
 </head>
@@ -88,6 +109,22 @@
                 <div id="p1-score" style="font-size: 1.8rem">0 / 7</div>
                 <div id="p1-deck-count" class="deck-counter">DECK: 49</div>
             </div>
+        </div>
+
+        <div id="counter-overlay">
+            <div id="counter-title" style="font-size: 1rem; margin-bottom: 10px;">Allocate Counters</div>
+            <div style="display:flex; justify-content: center; gap: 20px;">
+                <div id="power-pool-box" class="counter-pool-item">
+                    <div style="font-size: 0.6rem; color: #888;">POWER MARKERS</div>
+                    <div id="power-pool-val" class="power-marker-text">0</div>
+                </div>
+                <div id="weakness-pool-box" class="counter-pool-item">
+                    <div style="font-size: 0.6rem; color: #888;">WEAKNESS</div>
+                    <div id="weakness-pool-val" class="weakness-marker-text">0</div>
+                </div>
+            </div>
+            <div style="font-size: 0.7rem; color: #aaa; margin-top: 10px;">Click cards on the board to apply.</div>
+            <button id="finish-counters-btn" class="btn" style="margin-top: 15px; padding: 5px 20px;">Done</button>
         </div>
 
         <div class="seal-indicator-strip" id="seal-nodes">
@@ -153,51 +190,51 @@
          * ENDLESS SEVEN ENGINE - FULL MANIFEST DATA
          */
         const LIGHT_POOL = [
-            { name: "The Spinner", faction: "Light", type: "Avatar", power: 9, isChampion: true, ability: "Flip: Gain +1 Power per Acolyte. Win Con: Activate with 4 Acolytes + Seal Champion." },
+            { name: "The Spinner", faction: "Light", type: "Avatar", power: 9, isChampion: true, ability: "Flip: Gain +1 Power Marker for every Light card currently in play.", markerPower: 0, needsAllocation: true },
             { name: "The Allotter", faction: "Light", type: "Avatar", power: 9, isChampion: true, ability: "Flip: Destroy card on any Seal. Activate: Destroy any one Marker type." },
             { name: "Prophet", faction: "Light", type: "Avatar", power: 9, isChampion: true, ability: "Passive: Prevents Purified Seals from being Corrupted while in play." },
-            { name: "The Inevitable", faction: "Light", type: "Avatar", power: 9, isChampion: true, ability: "Post-Combat: After destroying a creature, destroy one other card or Marker." },
-            { name: "Saint Michael", faction: "Light", type: "Avatar", power: 10, isChampion: true, ability: "Win Con: Activate with 5+ Seals. Final Act: Move Limbo to Graveyard to destroy a card that battled." },
-            { name: "Martyr", faction: "Light", type: "Avatar", power: 9, isChampion: true, ability: "Limbo Trigger: Purify one Neutral Seal without a Champion when entering Limbo." },
+            { name: "The Inevitable", faction: "Light", type: "Avatar", power: 9, isChampion: true, ability: "Post-Combat: After destroying a creature, gain 2 Power Markers." },
+            { name: "Saint Michael", faction: "Light", type: "Avatar", power: 10, isChampion: true, ability: "Win Con: Activate with 5+ Seals. Final Act: Target battled card loses 3 Power." },
+            { name: "Martyr", faction: "Light", type: "Avatar", power: 9, isChampion: true, ability: "Limbo Trigger: Purify one Neutral Seal without a Champion." },
             { name: "The Almighty", faction: "Light", type: "God", power: 15, isChampion: true, ability: "Flip: Purify a Corrupted Seal without a Champion. Activate: Destroy any one Marker type." },
-            { name: "Archangel", faction: "Celestial", type: "Creature", power: 2, isChampion: false, ability: "Flip: Reveal a face-down card; Nullify its Flip ability." },
-            { name: "Cherubim", faction: "Celestial", type: "Creature", power: 4, isChampion: false, ability: "Flip: Return any creature in play to the top of its owner's deck." },
-            { name: "Fallen One", faction: "Celestial", type: "Creature", power: 6, isChampion: false, ability: "Haste: Resolve battle before Flip. Final Act: Nullify any card ability activation." },
-            { name: "Herald", faction: "Celestial", type: "Creature", power: 5, isChampion: false, ability: "Flip: Gain Power Markers equal to the Power Value of the deck's top card." },
-            { name: "Nephilim", faction: "Celestial", type: "Creature", power: 3, isChampion: false, ability: "Flip: Battle invulnerability. Activate: Freeze Seal Influence until end of round." },
-            { name: "Seraphim", faction: "Celestial", type: "Creature", power: 7, isChampion: false, ability: "Passive: Protects other Celestials from abilities while Championing a Seal." },
-            { name: "Thrones", faction: "Angel", type: "Creature", power: 1, isChampion: false, ability: "Flip: Change Influence of any Seal without a Champion." },
-            { name: "Alpha", faction: "Lycan", type: "Creature", power: 7, isChampion: false, ability: "Haste: Resolve combat first. Gain +2 Power after destroying an enemy." },
-            { name: "Beta", faction: "Lycan", type: "Creature", power: 6, isChampion: false, ability: "Flip: Battle invulnerability. Action: +2 Power to adjacent creature." },
-            { name: "Omega", faction: "Lycan", type: "Creature", power: 5, isChampion: false, ability: "Flip: +1 Power for every Lycan in Play and Limbo." },
-            { name: "Sentinel", faction: "Lycan", type: "Creature", power: 4, isChampion: false, ability: "Flip: Copy Power Value of a creature in Limbo as Markers." },
-            { name: "Delta", faction: "Lycan", type: "Creature", power: 3, isChampion: false, ability: "Flip: Buff 3 cards. Activate: Sacrifice at round end for +3 Power buff." },
-            { name: "Luna", faction: "Lycan", type: "Creature", power: 2, isChampion: false, ability: "Final Act: Move to Graveyard to Nullify enemy Influence change." },
-            { name: "Wild Wolf", faction: "Lycan", type: "Creature", power: 1, isChampion: false, ability: "Haste: Resolve combat first. Destroy battling creature at end of round." }
+            { name: "Archangel", faction: "Celestial", type: "Creature", power: 2, isChampion: false, ability: "Flip: Nullify enemy Flip ability here." },
+            { name: "Cherubim", faction: "Celestial", type: "Creature", power: 4, isChampion: false, ability: "Flip: Return target creature in play to owner's deck." },
+            { name: "Fallen One", faction: "Celestial", type: "Creature", power: 6, isChampion: false, ability: "Haste: Resolve battle before Flip." },
+            { name: "Herald", faction: "Celestial", type: "Creature", power: 5, isChampion: false, ability: "Flip: Gain Power Markers equal to the top card of your deck.", markerPower: 5, needsAllocation: true },
+            { name: "Nephilim", faction: "Celestial", type: "Creature", power: 3, isChampion: false, ability: "Flip: Battle invulnerability this round." },
+            { name: "Seraphim", faction: "Celestial", type: "Creature", power: 7, isChampion: false, ability: "Passive: Protects others while Champion." },
+            { name: "Thrones", faction: "Angel", type: "Creature", power: 1, isChampion: false, ability: "Flip: Change Influence of empty Seal." },
+            { name: "Alpha", faction: "Lycan", type: "Creature", power: 7, isChampion: false, ability: "Haste: Combat first. Gain 2 Power Markers after victory.", markerPower: 2, needsAllocation: true },
+            { name: "Beta", faction: "Lycan", type: "Creature", power: 6, isChampion: false, ability: "Flip: Battle invulnerability. Buff adjacent unit +2." },
+            { name: "Omega", faction: "Lycan", type: "Creature", power: 5, isChampion: false, ability: "Flip: +1 Power Marker for every Lycan in Play.", markerPower: 1, needsAllocation: true },
+            { name: "Sentinel", faction: "Lycan", type: "Creature", power: 4, isChampion: false, ability: "Flip: Target card loses 2 Power.", markerWeakness: 2, needsAllocation: true },
+            { name: "Delta", faction: "Lycan", type: "Creature", power: 3, isChampion: false, ability: "Flip: Buff 3 cards +1 Power each.", markerPower: 3, needsAllocation: true },
+            { name: "Luna", faction: "Lycan", type: "Creature", power: 2, isChampion: false, ability: "Final Act: Nullify enemy Influence change." },
+            { name: "Wild Wolf", faction: "Lycan", type: "Creature", power: 1, isChampion: false, ability: "Haste: Resolve combat first." }
         ];
 
         const DARK_POOL = [
-            { name: "Death", faction: "Darkness", type: "Avatar", power: 9, isChampion: true, ability: "Flip: Destroy all cards of a chosen type. Win Con: Activate with 4 Horsemen + Seal Champion." },
-            { name: "Famine", faction: "Darkness", type: "Avatar", power: 9, isChampion: true, ability: "Flip: Destroy any card in play." },
-            { name: "Pestilence", faction: "Darkness", type: "Avatar", power: 9, isChampion: true, ability: "Flip: Apply -2 Weakness per Horseman to all enemy creatures." },
-            { name: "War", faction: "Darkness", type: "Avatar", power: 9, isChampion: true, ability: "Post-Combat: Gain +2 Power per Horseman in play after destroying a creature." },
-            { name: "Lilith", faction: "Darkness", type: "Avatar", power: 10, isChampion: true, ability: "Win Con: Activate with 5+ Seals. Final Act: Move Limbo to Graveyard to destroy a card that battled." },
-            { name: "Hades", faction: "Darkness", type: "Avatar", power: 9, isChampion: true, ability: "Flip: Gain +2 Power per Horseman. Move card from Limbo to top of Deck." },
-            { name: "The Destroyer", faction: "Darkness", type: "God", power: 15, isChampion: true, ability: "Flip: Corrupt un-championed Purified Seals. Activate: Destroy all Markers of one type." },
-            { name: "Wrath", faction: "Daemon", type: "Creature", power: 7, isChampion: false, ability: "Flip: Global -1 Weakness to enemies. Passive: Immune to creatures with Weakness." },
-            { name: "Pride", faction: "Daemon", type: "Creature", power: 6, isChampion: false, ability: "Flip: -3 Weakness to card across. Action: +2 Power to adjacent creature." },
-            { name: "Greed", faction: "Daemon", type: "Creature", power: 5, isChampion: false, ability: "Flip: Battle invulnerability. Activate: Siphon all Power Markers in play to self." },
-            { name: "Sloth", faction: "Daemon", type: "Creature", power: 4, isChampion: false, ability: "Passive: Ability immune. Flip: -3 Weakness. Action: Destroy creature with Weakness." },
-            { name: "Envy", faction: "Daemon", type: "Creature", power: 3, isChampion: false, ability: "Flip: -3 Weakness to any card with Power >= Envy." },
-            { name: "Lust", faction: "Daemon", type: "Creature", power: 2, isChampion: false, ability: "Flip: Forced mutual sacrifice. Change Influence if Seal is empty." },
-            { name: "Gluttony", faction: "Daemon", type: "Creature", power: 1, isChampion: false, ability: "Flip: Siphon all Power Markers in play to self." },
-            { name: "Lord", faction: "Vampyre", type: "Creature", power: 7, isChampion: false, ability: "Flip: Spin Champion to top of deck. Activate: +1 Power per Vampyre in play." },
-            { name: "Duke", faction: "Vampyre", type: "Creature", power: 6, isChampion: false, ability: "Flip: Spin creature to top of deck. Passive: Friendly cards count as Vampyre." },
-            { name: "Elder", faction: "Vampyre", type: "Creature", power: 5, isChampion: false, ability: "Haste: Resolve combat first. Spin battling creature to top of deck." },
-            { name: "Noble", faction: "Vampyre", type: "Creature", power: 4, isChampion: false, ability: "Flip: Destroy one creature. End of Turn: Gain +2 Power." },
-            { name: "Regent", faction: "Vampyre", type: "Creature", power: 3, isChampion: false, ability: "Flip: Change Influence of any Seal without a Champion." },
-            { name: "Baron", faction: "Vampyre", type: "Creature", power: 2, isChampion: false, ability: "Flip: Nullify Flip here. Action: Swap self with friendly Limbo card." },
-            { name: "Fledgeling", faction: "Vampyre", type: "Creature", power: 1, isChampion: false, ability: "Passive: Cannot battle. Flip: +3 Power buff. Sacrifice at end of turn." }
+            { name: "Death", faction: "Darkness", type: "Horseman", power: 9, isChampion: true, ability: "Flip: Target card loses 5 Power.", markerWeakness: 5, needsAllocation: true },
+            { name: "Famine", faction: "Darkness", type: "Horseman", power: 9, isChampion: true, ability: "Flip: Destroy any card in play." },
+            { name: "Pestilence", faction: "Darkness", type: "Horseman", power: 9, isChampion: true, ability: "Flip: All enemy creatures lose 2 Power.", markerWeakness: 2, needsAllocation: true },
+            { name: "War", faction: "Darkness", type: "Horseman", power: 9, isChampion: true, ability: "Post-Combat: Gain 3 Power Markers after destroying a creature.", markerPower: 3, needsAllocation: true },
+            { name: "Lilith", faction: "Darkness", type: "Avatar", power: 10, isChampion: true, ability: "Win Con: Activate with 5+ Seals." },
+            { name: "Hades", faction: "Darkness", type: "Avatar", power: 9, isChampion: true, ability: "Flip: Gain 2 Power Markers.", markerPower: 2, needsAllocation: true },
+            { name: "The Destroyer", faction: "Darkness", type: "God", power: 15, isChampion: true, ability: "Flip: Corrupt Purified Seals without Champions." },
+            { name: "Wrath", faction: "Daemon", type: "Creature", power: 7, isChampion: false, ability: "Flip: Enemy loses 1 Power.", markerWeakness: 1, needsAllocation: true },
+            { name: "Pride", faction: "Daemon", type: "Creature", power: 6, isChampion: false, ability: "Flip: Card across loses 3 Power.", markerWeakness: 3, needsAllocation: true },
+            { name: "Greed", faction: "Daemon", type: "Creature", power: 5, isChampion: false, ability: "Flip: Battle invulnerability." },
+            { name: "Sloth", faction: "Daemon", type: "Creature", power: 4, isChampion: false, ability: "Flip: Target card loses 3 Power.", markerWeakness: 3, needsAllocation: true },
+            { name: "Envy", faction: "Daemon", type: "Creature", power: 3, isChampion: false, ability: "Flip: Target card loses 3 Power.", markerWeakness: 3, needsAllocation: true },
+            { name: "Lust", faction: "Daemon", type: "Creature", power: 2, isChampion: false, ability: "Flip: Forced mutual sacrifice." },
+            { name: "Gluttony", faction: "Daemon", type: "Creature", power: 1, isChampion: false, ability: "Flip: Siphon all Power Markers." },
+            { name: "Lord", faction: "Vampyre", type: "Creature", power: 7, isChampion: false, ability: "Flip: Gain 1 Power Marker for each Vampyre.", markerPower: 1, needsAllocation: true },
+            { name: "Duke", faction: "Vampyre", type: "Creature", power: 6, isChampion: false, ability: "Flip: Card across loses 2 Power.", markerWeakness: 2, needsAllocation: true },
+            { name: "Elder", faction: "Vampyre", type: "Creature", power: 5, isChampion: false, ability: "Haste: Resolve combat first." },
+            { name: "Noble", faction: "Vampyre", type: "Creature", power: 4, isChampion: false, ability: "Flip: Target card loses 2 Power.", markerWeakness: 2, needsAllocation: true },
+            { name: "Regent", faction: "Vampyre", type: "Creature", power: 3, isChampion: false, ability: "Flip: Change Influence of empty Seal." },
+            { name: "Baron", faction: "Vampyre", type: "Creature", power: 2, isChampion: false, ability: "Flip: Nullify Flip here." },
+            { name: "Fledgeling", faction: "Vampyre", type: "Creature", power: 1, isChampion: false, ability: "Flip: Gain 3 Power Markers.", markerPower: 3, needsAllocation: true }
         ];
 
         const SEVEN = 7;
@@ -226,6 +263,11 @@
         let activeSelection = null;
         let isProcessing = false;
 
+        // Counter State
+        let pendingPowerPool = 0;
+        let pendingWeaknessPool = 0;
+        let allocationCallback = null;
+
         let playerDeckMesh, enemyDeckMesh, playerLimboMesh, enemyLimboMesh, floorMesh;
 
         function init() {
@@ -248,7 +290,6 @@
             setupLighting();
             createTabletop();
             
-            // Build Initial Decks
             playerDeck = buildDeck(LIGHT_POOL, "Avatar", "God");
             enemyDeck = buildDeck(DARK_POOL, "Avatar", "God");
 
@@ -259,23 +300,17 @@
             window.addEventListener('resize', onWindowResize);
             document.getElementById('main-action-btn').addEventListener('click', handleMainAction);
             document.getElementById('restart-btn').addEventListener('click', restartGame);
+            document.getElementById('finish-counters-btn').addEventListener('click', finishCounters);
 
             animate();
         }
 
-        /**
-         * DECK LOGIC
-         */
         function buildDeck(pool, singleTypeA, singleTypeB) {
             let deck = [];
             pool.forEach(card => {
-                // Avatars and Gods are 1 copy. Everyone else is 3 copies.
                 let copies = (card.type === singleTypeA || card.type === singleTypeB) ? 1 : 3;
-                for (let i = 0; i < copies; i++) {
-                    deck.push({ ...card });
-                }
+                for (let i = 0; i < copies; i++) { deck.push({ ...card }); }
             });
-            // Shuffle
             for (let i = deck.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [deck[i], deck[j]] = [deck[j], deck[i]];
@@ -307,7 +342,6 @@
             scene.add(floorMesh);
 
             const startX = -(SEVEN - 1) * SLOT_SPACING / 2;
-
             for (let i = 0; i < SEVEN; i++) {
                 const x = startX + i * SLOT_SPACING;
                 const hub = new THREE.Mesh(
@@ -363,17 +397,10 @@
 
         function createPile(color) {
             const group = new THREE.Group();
-            const base = new THREE.Mesh(
-                new THREE.BoxGeometry(CARD_W + 0.3, 0.1, CARD_H + 0.3),
-                new THREE.MeshPhongMaterial({ color: 0x000000, transparent: true, opacity: 0.7 })
-            );
+            const base = new THREE.Mesh(new THREE.BoxGeometry(CARD_W + 0.3, 0.1, CARD_H + 0.3), new THREE.MeshPhongMaterial({ color: 0x000000, transparent: true, opacity: 0.7 }));
             group.add(base);
-
             for(let i=0; i<6; i++) {
-                const layer = new THREE.Mesh(
-                    new THREE.BoxGeometry(CARD_W, 0.05, CARD_H),
-                    new THREE.MeshPhongMaterial({ color })
-                );
+                const layer = new THREE.Mesh(new THREE.BoxGeometry(CARD_W, 0.05, CARD_H), new THREE.MeshPhongMaterial({ color }));
                 layer.position.y = 0.05 + (i * 0.06);
                 layer.rotation.y = (Math.random() - 0.5) * 0.15;
                 group.add(layer);
@@ -383,40 +410,23 @@
 
         function addLabel(parent, text, color) {
             const canvas = document.createElement('canvas');
-            canvas.width = 256; canvas.height = 128; // taller to hold numbers
+            canvas.width = 256; canvas.height = 128;
             const ctx = canvas.getContext('2d');
-            ctx.fillStyle = 'white';
-            ctx.font = 'bold 44px Cinzel';
-            ctx.textAlign = 'center';
-            ctx.fillText(text, 128, 48);
-            
-            // Placeholder for count
-            ctx.font = 'bold 36px Arial';
-            ctx.fillText("--", 128, 90);
-
+            ctx.fillStyle = 'white'; ctx.font = 'bold 44px Cinzel'; ctx.textAlign = 'center'; ctx.fillText(text, 128, 48);
+            ctx.font = 'bold 36px Arial'; ctx.fillText("--", 128, 90);
             const tex = new THREE.CanvasTexture(canvas);
-            const label = new THREE.Mesh(
-                new THREE.PlaneGeometry(3.5, 1.75),
-                new THREE.MeshBasicMaterial({ map: tex, transparent: true, color })
-            );
-            label.rotation.x = -Math.PI/2;
-            label.position.y = 0.8;
+            const label = new THREE.Mesh(new THREE.PlaneGeometry(3.5, 1.75), new THREE.MeshBasicMaterial({ map: tex, transparent: true, color }));
+            label.rotation.x = -Math.PI/2; label.position.y = 0.8;
             parent.add(label);
-            parent.userData.labelCanvas = canvas;
-            parent.userData.labelTexture = tex;
-            parent.userData.labelText = text;
+            parent.userData = { labelCanvas: canvas, labelTexture: tex, labelText: text };
         }
 
         function updateDeckLabel(mesh, count) {
             if (!mesh.userData.labelCanvas) return;
             const ctx = mesh.userData.labelCanvas.getContext('2d');
             ctx.clearRect(0,0,256,128);
-            ctx.fillStyle = 'white';
-            ctx.font = 'bold 44px Cinzel';
-            ctx.textAlign = 'center';
-            ctx.fillText(mesh.userData.labelText, 128, 48);
-            ctx.font = 'bold 40px Arial';
-            ctx.fillText(count, 128, 95);
+            ctx.fillStyle = 'white'; ctx.font = 'bold 44px Cinzel'; ctx.textAlign = 'center'; ctx.fillText(mesh.userData.labelText, 128, 48);
+            ctx.font = 'bold 40px Arial'; ctx.fillText(count, 128, 95);
             mesh.userData.labelTexture.needsUpdate = true;
         }
 
@@ -432,89 +442,71 @@
             const canvas = document.createElement('canvas');
             canvas.width = 256; canvas.height = 384;
             const ctx = canvas.getContext('2d');
-            
-            ctx.fillStyle = isEnemy ? '#200' : '#002';
-            ctx.fillRect(0,0,256,384);
-            ctx.strokeStyle = isEnemy ? '#f66' : '#6ff';
-            ctx.lineWidth = 16;
-            ctx.strokeRect(0,0,256,384);
-            
-            ctx.fillStyle = 'white';
-            ctx.font = 'bold 22px Cinzel';
-            ctx.textAlign = 'center';
-            ctx.fillText(data.name.toUpperCase(), 128, 50);
-            
-            ctx.font = '14px Cinzel';
-            ctx.fillStyle = isEnemy ? '#f88' : '#8ff';
-            ctx.fillText(data.faction, 128, 75);
-
-            ctx.fillStyle = 'white';
-            ctx.font = 'bold 100px Cinzel';
-            ctx.shadowColor = 'rgba(0,0,0,0.8)';
-            ctx.shadowBlur = 15;
-            ctx.fillText(data.power, 128, 220);
-            
-            ctx.font = 'bold 30px Cinzel';
-            ctx.fillText(data.isChampion ? 'CHAMPION' : data.type.toUpperCase(), 128, 310);
+            ctx.fillStyle = isEnemy ? '#200' : '#002'; ctx.fillRect(0,0,256,384);
+            ctx.strokeStyle = isEnemy ? '#f66' : '#6ff'; ctx.lineWidth = 16; ctx.strokeRect(0,0,256,384);
+            ctx.fillStyle = 'white'; ctx.font = 'bold 22px Cinzel'; ctx.textAlign = 'center'; ctx.fillText(data.name.toUpperCase(), 128, 50);
+            ctx.font = '14px Cinzel'; ctx.fillStyle = isEnemy ? '#f88' : '#8ff'; ctx.fillText(data.faction, 128, 75);
+            ctx.fillStyle = 'white'; ctx.font = 'bold 100px Cinzel'; ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 15; ctx.fillText(data.power, 128, 220);
+            ctx.font = 'bold 30px Cinzel'; ctx.fillText(data.isChampion ? 'CHAMPION' : data.type.toUpperCase(), 128, 310);
 
             const tex = new THREE.CanvasTexture(canvas);
-            const label = new THREE.Mesh(
-                new THREE.PlaneGeometry(CARD_W * 0.95, CARD_H * 0.95),
-                new THREE.MeshBasicMaterial({ map: tex, transparent: true })
-            );
-            label.rotation.x = -Math.PI/2;
-            label.position.y = 0.08;
+            const label = new THREE.Mesh(new THREE.PlaneGeometry(CARD_W * 0.95, CARD_H * 0.95), new THREE.MeshBasicMaterial({ map: tex, transparent: true }));
+            label.rotation.x = -Math.PI/2; label.position.y = 0.08;
             group.add(label);
 
-            group.userData = { ...data, isEnemy, faceUp: false };
+            // Counter Containers (Visual)
+            const pMark = new THREE.Group(); pMark.position.set(-0.8, 0.1, 1.2); group.add(pMark);
+            const wMark = new THREE.Group(); wMark.position.set(0.8, 0.1, 1.2); group.add(wMark);
+
+            group.userData = { ...data, isEnemy, faceUp: false, powerMarkers: 0, weaknessMarkers: 0, pMesh: pMark, wMesh: wMark };
             return group;
+        }
+
+        function updateCardVisualMarkers(card) {
+            const ud = card.userData;
+            // Clear existing
+            while(ud.pMesh.children.length > 0) ud.pMesh.remove(ud.pMesh.children[0]);
+            while(ud.wMesh.children.length > 0) ud.wMesh.remove(ud.wMesh.children[0]);
+
+            for(let i=0; i<ud.powerMarkers; i++) {
+                const dot = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), new THREE.MeshBasicMaterial({ color: 0x00f2ff }));
+                dot.position.y = i * 0.15;
+                ud.pMesh.add(dot);
+            }
+            for(let i=0; i<ud.weaknessMarkers; i++) {
+                const dot = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), new THREE.MeshBasicMaterial({ color: 0xff0044 }));
+                dot.position.y = i * 0.15;
+                ud.wMesh.add(dot);
+            }
         }
 
         async function startPrepPhase() {
             if (isProcessing) return;
-            isProcessing = true;
-            currentPhase = 'PREP';
+            isProcessing = true; currentPhase = 'PREP';
             document.getElementById('phase-name-label').innerText = "Prep Phase";
             document.getElementById('main-action-btn').disabled = true;
-            document.getElementById('main-action-btn').innerText = "Preparing...";
-            
             updateStepLabel("Step 1: Draw Hand");
-            document.getElementById('instruction-text').innerText = "Pulling from the deck of Light...";
             
             playerHand = []; 
             for (let i = 0; i < 8; i++) {
                 if (playerDeck.length === 0) break;
-                
                 const cardData = playerDeck.pop();
                 const card = createCardMesh(cardData, false);
                 card.position.copy(playerDeckMesh.position);
                 card.position.y += 2;
-                scene.add(card);
-                playerHand.push(card);
-                
+                scene.add(card); playerHand.push(card);
                 const offset = (i - 3.5);
-                const angle = offset * 0.06;
-                const tx = offset * 2.15; 
-                const tz = tuning.dist + (Math.abs(offset) * 0.3); 
-                
-                gsap.to(card.position, { x: tx, y: tuning.height, z: tz, duration: 0.6, ease: "power2.out" });
-                gsap.to(card.rotation, { x: tuning.tilt, y: angle, z: 0, duration: 0.6 });
-                
-                updateUICounters();
-                await sleep(100);
+                gsap.to(card.position, { x: offset * 2.15, y: tuning.height, z: tuning.dist + (Math.abs(offset) * 0.3), duration: 0.6, ease: "power2.out" });
+                gsap.to(card.rotation, { x: tuning.tilt, y: offset * 0.06, z: 0, duration: 0.6 });
+                updateUICounters(); await sleep(100);
             }
-
             await sleep(300);
             updateStepLabel("Step 2: Shuffle Deck");
-            document.getElementById('instruction-text').innerText = "Randomizing future possibilities.";
             await performShuffleAnimation();
-            
             await sleep(300);
             updateStepLabel("Step 3: Strategic Reinforcement");
-            document.getElementById('instruction-text').innerText = "Assign your units to the Seals.";
             document.getElementById('main-action-btn').disabled = false;
             document.getElementById('main-action-btn').innerText = "End Prep Phase";
-            
             enemyReinforce();
             isProcessing = false;
         }
@@ -522,22 +514,16 @@
         async function performShuffleAnimation() {
             const layers = playerDeckMesh.children.filter(c => c.type === "Mesh" && c.geometry && c.geometry.type === "BoxGeometry");
             for(let i=0; i<4; i++) {
-                layers.forEach((l) => {
-                    gsap.to(l.position, { x: (Math.random() - 0.5) * 1.8, z: (Math.random() - 0.5) * 1.8, duration: 0.15, yoyo: true, repeat: 1 });
-                });
+                layers.forEach((l) => { gsap.to(l.position, { x: (Math.random() - 0.5) * 1.8, z: (Math.random() - 0.5) * 1.8, duration: 0.15, yoyo: true, repeat: 1 }); });
                 await sleep(150);
             }
         }
 
         function enemyReinforce() {
             const aiHandData = [];
-            for (let i = 0; i < 8; i++) {
-                if (enemyDeck.length > 0) aiHandData.push(enemyDeck.pop());
-            }
-
+            for (let i = 0; i < 8; i++) { if (enemyDeck.length > 0) aiHandData.push(enemyDeck.pop()); }
             const vacantSlots = [];
             for (let i = 0; i < SEVEN; i++) { if (!enemyBattlefield[i]) vacantSlots.push(i); }
-
             vacantSlots.sort((a, b) => {
                 const score = (idx) => {
                     const seal = seals[idx];
@@ -547,23 +533,14 @@
                 };
                 return score(b) - score(a);
             });
-
             for (let i = 0; i < vacantSlots.length && aiHandData.length > 0; i++) {
                 const slotIdx = vacantSlots[i];
                 aiHandData.sort((a, b) => b.power - a.power);
                 const cardData = aiHandData.shift();
-
                 const card = createCardMesh(cardData, true);
-                card.position.copy(enemyDeckMesh.position);
-                card.rotation.x = Math.PI;
-                scene.add(card);
-                enemyBattlefield[slotIdx] = card;
-
-                gsap.to(card.position, { 
-                    x: (slotIdx - 3) * SLOT_SPACING, 
-                    y: 0.1, z: -3.2, 
-                    duration: 0.8, delay: i * 0.15 
-                });
+                card.position.copy(enemyDeckMesh.position); card.rotation.x = Math.PI;
+                scene.add(card); enemyBattlefield[slotIdx] = card;
+                gsap.to(card.position, { x: (slotIdx - 3) * SLOT_SPACING, y: 0.1, z: -3.2, duration: 0.8, delay: i * 0.15 });
             }
             updateUICounters();
         }
@@ -575,60 +552,40 @@
             updateDeckLabel(enemyDeckMesh, enemyDeck.length);
         }
 
-        function handleMainAction() {
-            if (currentPhase === 'PREP' && !isProcessing) endPrep();
-        }
+        function handleMainAction() { if (currentPhase === 'PREP' && !isProcessing) endPrep(); }
 
         function endPrep() {
-            isProcessing = true;
-            updateStepLabel("Finalizing Placements...");
-            document.getElementById('instruction-text').innerText = "Purging excess units to Limbo.";
+            isProcessing = true; updateStepLabel("Finalizing Placements...");
             playerHand.forEach((card, i) => {
                 playerLimbo.push(card);
-                gsap.to(card.position, { 
-                    x: playerLimboMesh.position.x, 
-                    y: 0.2 + (playerLimbo.length * 0.05), 
-                    z: playerLimboMesh.position.z, 
-                    duration: 0.6,
-                    delay: i * 0.05,
-                    onComplete: () => { 
-                        card.rotation.set(0, 0, 0); 
-                        if (card.children[0]) card.children[0].material.emissiveIntensity = 0.3; 
-                    }
-                });
+                gsap.to(card.position, { x: playerLimboMesh.position.x, y: 0.2 + (playerLimbo.length * 0.05), z: playerLimboMesh.position.z, duration: 0.6, delay: i * 0.05, onComplete: () => { card.rotation.set(0, 0, 0); if (card.children[0]) card.children[0].material.emissiveIntensity = 0.3; } });
             });
-            playerHand = [];
-            activeSelection = null;
+            playerHand = []; activeSelection = null;
             setTimeout(() => { startResolution(); }, 800);
         }
 
         async function startResolution() {
             currentPhase = 'RESOLUTION';
             document.getElementById('main-action-btn').disabled = true;
-            document.getElementById('main-action-btn').innerText = "Resolving...";
             for (let i = 0; i < SEVEN; i++) { await resolveSeal(i); }
             checkVictory();
             if (currentPhase !== 'GAME_OVER') {
-                currentRound++;
-                document.getElementById('round-indicator').innerText = `ROUND ${currentRound}`;
+                currentRound++; document.getElementById('round-indicator').innerText = `ROUND ${currentRound}`;
                 gsap.to(camera.position, { x: 0, y: 28, z: 32, duration: 1.5, ease: "power2.inOut" });
                 gsap.to(cameraTarget, { x: 0, y: 0, z: -2, duration: 1.5, ease: "power2.inOut" });
                 if (currentRound > 3) finalizeGame();
-                else {
-                    isProcessing = false;
-                    startPrepPhase();
-                }
+                else { isProcessing = false; startPrepPhase(); }
             }
         }
 
         async function resolveSeal(idx) {
             const seal = seals[idx];
-            const nodes = document.querySelectorAll('.seal-node');
-            nodes.forEach(n => n.classList.remove('node-active'));
-            nodes[idx].classList.add('node-active');
+            document.querySelectorAll('.seal-node').forEach(n => n.classList.remove('node-active'));
+            document.querySelectorAll('.seal-node')[idx].classList.add('node-active');
             document.getElementById('phase-name-label').innerText = `Seal ${idx + 1}`;
             gsap.to(camera.position, { x: seal.mesh.position.x, y: 14, z: 14, duration: 1 });
             gsap.to(cameraTarget, { x: seal.mesh.position.x, y: 0, z: 0, duration: 1 });
+            
             let pCard = playerBattlefield[idx];
             let eCard = enemyBattlefield[idx];
             
@@ -637,85 +594,97 @@
             if (eCard) gsap.to(eCard.rotation, { x: 0, duration: 0.5 });
             await sleep(800);
 
+            // Step B: Counter Management
+            updateStepLabel("Step B: Counter Allocation");
+            if (pCard && pCard.userData.needsAllocation) {
+                await allocateCounters(pCard, false);
+            }
+            if (eCard && eCard.userData.needsAllocation) {
+                await allocateCounters(eCard, true);
+            }
+
             updateStepLabel("Step C: Battle");
             if (pCard && seal.champion && seal.champion.userData.isEnemy) {
-                const pPower = pCard.userData.power;
-                const cPower = seal.champion.userData.power;
-                if (pPower > cPower) {
-                    destroyToLimbo(seal.champion, true, idx, true);
-                    seal.champion = null;
-                } else if (pPower < cPower) {
-                    destroyToLimbo(pCard, false, idx);
-                    pCard = null;
-                } else {
-                    destroyToLimbo(seal.champion, true, idx, true);
-                    destroyToLimbo(pCard, false, idx);
-                    seal.champion = null; pCard = null;
-                }
+                const pPow = pCard.userData.power + pCard.userData.powerMarkers - pCard.userData.weaknessMarkers;
+                const cPow = seal.champion.userData.power + seal.champion.userData.powerMarkers - seal.champion.userData.weaknessMarkers;
+                if (pPow > cPow) { destroyToLimbo(seal.champion, true, idx, true); seal.champion = null; }
+                else if (pPow < cPow) { destroyToLimbo(pCard, false, idx); pCard = null; }
+                else { destroyToLimbo(seal.champion, true, idx, true); destroyToLimbo(pCard, false, idx); seal.champion = null; pCard = null; }
                 await sleep(500);
             }
             if (eCard && seal.champion && !seal.champion.userData.isEnemy) {
-                const ePower = eCard.userData.power;
-                const cPower = seal.champion.userData.power;
-                if (ePower > cPower) {
-                    destroyToLimbo(seal.champion, false, idx, true);
-                    seal.champion = null;
-                } else if (ePower < cPower) {
-                    destroyToLimbo(eCard, true, idx);
-                    eCard = null;
-                } else {
-                    destroyToLimbo(seal.champion, false, idx, true);
-                    destroyToLimbo(eCard, true, idx);
-                    seal.champion = null; eCard = null;
-                }
+                const ePow = eCard.userData.power + eCard.userData.powerMarkers - eCard.userData.weaknessMarkers;
+                const cPow = seal.champion.userData.power + seal.champion.userData.powerMarkers - seal.champion.userData.weaknessMarkers;
+                if (ePow > cPow) { destroyToLimbo(seal.champion, false, idx, true); seal.champion = null; }
+                else if (ePow < cPow) { destroyToLimbo(eCard, true, idx); eCard = null; }
+                else { destroyToLimbo(seal.champion, false, idx, true); destroyToLimbo(eCard, true, idx); seal.champion = null; eCard = null; }
                 await sleep(500);
             }
             if (pCard && eCard) {
-                const pPower = pCard.userData.power;
-                const ePower = eCard.userData.power;
-                if (pPower > ePower) {
-                    destroyToLimbo(eCard, true, idx);
-                    eCard = null; await handlePostBattleSiege(idx, pPower, true);
-                } else if (ePower > pPower) {
-                    destroyToLimbo(pCard, false, idx);
-                    pCard = null; await handlePostBattleSiege(idx, ePower, false);
-                } else {
-                    destroyToLimbo(pCard, false, idx);
-                    destroyToLimbo(eCard, true, idx);
-                    pCard = null; eCard = null;
-                }
-            } else if (pCard) { await handlePostBattleSiege(idx, pCard.userData.power, true);
-            } else if (eCard) { await handlePostBattleSiege(idx, eCard.userData.power, false);
-            } else { await handlePostBattleSiege(idx, 0, true); }
+                const pPow = pCard.userData.power + pCard.userData.powerMarkers - pCard.userData.weaknessMarkers;
+                const ePow = eCard.userData.power + eCard.userData.powerMarkers - eCard.userData.weaknessMarkers;
+                if (pPow > ePow) { destroyToLimbo(eCard, true, idx); eCard = null; await handlePostBattleSiege(idx, pPow, true); }
+                else if (ePow > pPow) { destroyToLimbo(pCard, false, idx); pCard = null; await handlePostBattleSiege(idx, ePow, false); }
+                else { destroyToLimbo(pCard, false, idx); destroyToLimbo(eCard, true, idx); pCard = null; eCard = null; }
+            } else if (pCard) { await handlePostBattleSiege(idx, pCard.userData.power + pCard.userData.powerMarkers - pCard.userData.weaknessMarkers, true); }
+            else if (eCard) { await handlePostBattleSiege(idx, eCard.userData.power + eCard.userData.powerMarkers - eCard.userData.weaknessMarkers, false); }
+            else { await handlePostBattleSiege(idx, 0, true); }
             await sleep(600);
 
             updateStepLabel("Step E: Ascension");
             const survivor = (playerBattlefield[idx]) ? playerBattlefield[idx] : ((enemyBattlefield[idx]) ? enemyBattlefield[idx] : null);
-            if (survivor && survivor.userData.isChampion && !seal.champion) {
-                ascendToSeal(survivor, idx);
-            }
+            if (survivor && survivor.userData.isChampion && !seal.champion) { ascendToSeal(survivor, idx); }
             await sleep(1000);
+        }
+
+        async function allocateCounters(card, isAI) {
+            const data = card.userData;
+            pendingPowerPool = data.markerPower || 0;
+            pendingWeaknessPool = data.markerWeakness || 0;
+
+            if (isAI) {
+                // AI Logic: Put power on own unit/champion, weakness on enemy
+                for (let i = 0; i < pendingPowerPool; i++) {
+                    const targets = enemyBattlefield.filter(c => c !== null);
+                    if (targets.length > 0) { targets[0].userData.powerMarkers++; updateCardVisualMarkers(targets[0]); }
+                }
+                for (let i = 0; i < pendingWeaknessPool; i++) {
+                    const targets = playerBattlefield.filter(c => c !== null);
+                    if (targets.length > 0) { targets[0].userData.weaknessMarkers++; updateCardVisualMarkers(targets[0]); }
+                }
+                pendingPowerPool = 0; pendingWeaknessPool = 0;
+                return Promise.resolve();
+            } else {
+                currentPhase = 'COUNTER_ALLOCATION';
+                document.getElementById('counter-overlay').style.display = 'block';
+                document.getElementById('power-pool-val').innerText = pendingPowerPool;
+                document.getElementById('weakness-pool-val').innerText = pendingWeaknessPool;
+                
+                return new Promise((resolve) => {
+                    allocationCallback = resolve;
+                });
+            }
+        }
+
+        function finishCounters() {
+            if (pendingPowerPool > 0 || pendingWeaknessPool > 0) {
+                // Warning logic could go here
+            }
+            document.getElementById('counter-overlay').style.display = 'none';
+            currentPhase = 'RESOLUTION';
+            if (allocationCallback) allocationCallback();
+            allocationCallback = null;
         }
 
         async function handlePostBattleSiege(idx, attackerPower, isPlayer) {
             const seal = seals[idx];
             const attacker = isPlayer ? playerBattlefield[idx] : enemyBattlefield[idx];
             if (seal.champion && seal.champion.userData.isEnemy === isPlayer) {
-                const champPower = seal.champion.userData.power;
-                if (attackerPower > champPower) {
-                    destroyToLimbo(seal.champion, !isPlayer, idx, true);
-                    seal.champion = null;
-                    claimSeal(idx, isPlayer ? 'PURIFIED' : 'CORRUPTED');
-                } else if (attackerPower < champPower) {
-                    if (attacker) destroyToLimbo(attacker, !isPlayer, idx);
-                } else if (attackerPower === champPower && attackerPower > 0) {
-                    destroyToLimbo(seal.champion, !isPlayer, idx, true);
-                    if (attacker) destroyToLimbo(attacker, !isPlayer, idx);
-                    seal.champion = null; claimSeal(idx, 'NEUTRAL');
-                }
-            } else if (!seal.champion && attackerPower > 0) {
-                claimSeal(idx, isPlayer ? 'PURIFIED' : 'CORRUPTED');
-            }
+                const champPow = seal.champion.userData.power + seal.champion.userData.powerMarkers - seal.champion.userData.weaknessMarkers;
+                if (attackerPower > champPow) { destroyToLimbo(seal.champion, !isPlayer, idx, true); seal.champion = null; claimSeal(idx, isPlayer ? 'PURIFIED' : 'CORRUPTED'); }
+                else if (attackerPower < champPow) { if (attacker) destroyToLimbo(attacker, !isPlayer, idx); }
+                else if (attackerPower === champPow && attackerPower > 0) { destroyToLimbo(seal.champion, !isPlayer, idx, true); if (attacker) destroyToLimbo(attacker, !isPlayer, idx); seal.champion = null; claimSeal(idx, 'NEUTRAL'); }
+            } else if (!seal.champion && attackerPower > 0) { claimSeal(idx, isPlayer ? 'PURIFIED' : 'CORRUPTED'); }
         }
 
         function destroyToLimbo(card, isEnemy, idx, isChamp = false) {
@@ -729,15 +698,10 @@
         }
 
         function claimSeal(idx, status) {
-            const seal = seals[idx];
-            seal.alignment = status;
-            let color = 0x080808; 
-            if (status === 'PURIFIED') color = 0x00f2ff;
-            if (status === 'CORRUPTED') color = 0xff0044;
-            seal.mesh.material.emissive.setHex(color);
-            seal.mesh.material.emissiveIntensity = status === 'NEUTRAL' ? 0.1 : 0.8;
-            seal.light.color.setHex(color);
-            seal.light.intensity = status === 'NEUTRAL' ? 0 : 3.5;
+            const seal = seals[idx]; seal.alignment = status;
+            let color = 0x080808; if (status === 'PURIFIED') color = 0x00f2ff; if (status === 'CORRUPTED') color = 0xff0044;
+            seal.mesh.material.emissive.setHex(color); seal.mesh.material.emissiveIntensity = status === 'NEUTRAL' ? 0.1 : 0.8;
+            seal.light.color.setHex(color); seal.light.intensity = status === 'NEUTRAL' ? 0 : 3.5;
             document.querySelectorAll('.seal-node')[idx].className = 'seal-node ' + (status === 'PURIFIED' ? 'node-purified' : (status === 'CORRUPTED' ? 'node-corrupted' : ''));
             updateGlobalScores();
         }
@@ -758,91 +722,81 @@
             seals.forEach(seal => { if (seal.champion) scene.remove(seal.champion); seal.champion = null; seal.alignment = 'NEUTRAL'; seal.mesh.material.emissive.setHex(0x080808); seal.light.intensity = 0; });
             document.querySelectorAll('.seal-node').forEach(node => node.className = 'seal-node');
             playerBattlefield = Array(SEVEN).fill(null); enemyBattlefield = Array(SEVEN).fill(null);
-            playerHand = []; playerLimbo = []; enemyLimbo = []; currentRound = 1;
-            
-            // Regenerate Decks
-            playerDeck = buildDeck(LIGHT_POOL, "Avatar", "God");
-            enemyDeck = buildDeck(DARK_POOL, "Avatar", "God");
-
-            document.getElementById('round-indicator').innerText = `ROUND 1`;
+            playerDeck = buildDeck(LIGHT_POOL, "Avatar", "God"); enemyDeck = buildDeck(DARK_POOL, "Avatar", "God");
+            currentRound = 1; document.getElementById('round-indicator').innerText = `ROUND 1`;
             document.getElementById('p1-score').innerText = `0 / 7`; document.getElementById('p2-score').innerText = `0 / 7`;
             gsap.to(camera.position, { x: 0, y: 28, z: 32, duration: 1.5 }); cameraTarget.set(0, 0, -2);
-            isProcessing = false;
-            updateUICounters();
-            startPrepPhase();
+            isProcessing = false; updateUICounters(); startPrepPhase();
         }
 
         function onMouseMove(event) {
-            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1; mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
             raycaster.setFromCamera(mouse, camera);
-            
-            const allCards = [
-                ...playerHand, 
-                ...playerBattlefield.filter(c => c !== null), 
-                ...enemyBattlefield.filter(c => c !== null),
-                ...seals.map(s => s.champion).filter(c => c !== null)
-            ];
-            
+            const allCards = [...playerHand, ...playerBattlefield.filter(c => c !== null), ...enemyBattlefield.filter(c => c !== null), ...seals.map(s => s.champion).filter(c => c !== null)];
             const intersects = raycaster.intersectObjects(allCards, true);
             const tooltip = document.getElementById('card-tooltip');
-            
             if (intersects.length > 0) {
-                let card = intersects[0].object;
-                while (card.parent && !allCards.includes(card)) card = card.parent;
-                
+                let card = intersects[0].object; while (card.parent && !allCards.includes(card)) card = card.parent;
                 if (selectedObject !== card) {
                     if (selectedObject && playerHand.includes(selectedObject)) gsap.to(selectedObject.position, { y: tuning.height, duration: 0.2 });
                     if (playerHand.includes(card)) gsap.to(card.position, { y: tuning.height + 1.5, duration: 0.2 });
-                    
-                    selectedObject = card;
-                    tooltip.style.opacity = 1; 
-                    tooltip.style.left = event.clientX + 20 + 'px'; 
-                    tooltip.style.top = event.clientY - 40 + 'px';
-                    
+                    selectedObject = card; tooltip.style.opacity = 1; tooltip.style.left = event.clientX + 20 + 'px'; tooltip.style.top = event.clientY - 40 + 'px';
                     const data = card.userData;
-                    tooltip.innerHTML = `
-                        <div style="font-weight: bold; font-size: 1.1rem; margin-bottom: 5px;">${data.name}</div>
-                        <div style="color: ${data.isEnemy ? '#f88' : '#8ff'}; font-size: 0.7rem; letter-spacing: 1px; margin-bottom: 5px;">
-                            ${data.faction.toUpperCase()} / ${data.isChampion ? 'CHAMPION' : data.type.toUpperCase()}
-                        </div>
-                        <div style="font-size: 1.2rem; font-weight: bold; margin: 10px 0;">POWER: ${data.power}</div>
-                        <div class="tooltip-ability">${data.ability}</div>
-                    `;
+                    const effPow = data.power + data.powerMarkers - data.weaknessMarkers;
+                    tooltip.innerHTML = `<div style="font-weight: bold; font-size: 1.1rem; margin-bottom: 5px;">${data.name}</div><div style="color: ${data.isEnemy ? '#f88' : '#8ff'}; font-size: 0.7rem; letter-spacing: 1px; margin-bottom: 5px;">${data.faction.toUpperCase()} / ${data.isChampion ? 'CHAMPION' : data.type.toUpperCase()}</div><div style="font-size: 1.2rem; font-weight: bold; margin: 10px 0;">EFF. POWER: ${effPow} <span style="font-size: 0.7rem; font-weight: normal; color: #aaa;">(${data.power} +${data.powerMarkers} -${data.weaknessMarkers})</span></div><div class="tooltip-ability">${data.ability}</div>`;
                 }
             } else {
                 if (selectedObject && playerHand.includes(selectedObject)) gsap.to(selectedObject.position, { y: tuning.height, duration: 0.2 });
-                selectedObject = null; 
-                tooltip.style.opacity = 0;
+                selectedObject = null; tooltip.style.opacity = 0;
             }
         }
 
         function onMouseDown() {
-            if (currentPhase !== 'PREP' || isProcessing) return;
             raycaster.setFromCamera(mouse, camera);
-            const handIntersects = raycaster.intersectObjects(playerHand, true);
-            if (handIntersects.length > 0) {
-                let card = handIntersects[0].object;
-                while (card.parent && !playerHand.includes(card)) card = card.parent;
-                if (activeSelection && activeSelection.children[0]) activeSelection.children[0].material.emissiveIntensity = 0.8;
-                activeSelection = card; if (activeSelection.children[0]) activeSelection.children[0].material.emissiveIntensity = 2.5;
-                return;
-            }
-            if (activeSelection) {
-                const tableIntersects = raycaster.intersectObjects([floorMesh]);
-                if (tableIntersects.length > 0) {
-                    const intersect = tableIntersects[0];
-                    if (intersect.point.z > 0.5 && intersect.point.z < 7.0) {
-                        const startX = -(SEVEN - 1) * SLOT_SPACING / 2;
-                        const idx = Math.round((intersect.point.x - startX) / SLOT_SPACING);
-                        if (idx >= 0 && idx < SEVEN && !playerBattlefield[idx]) {
-                            const card = activeSelection; playerHand = playerHand.filter(c => c !== card); playerBattlefield[idx] = card;
-                            gsap.to(card.position, { x: (idx - 3) * SLOT_SPACING, y: 0.1, z: 3.2, duration: 0.5, ease: "power2.inOut" });
-                            gsap.to(card.rotation, { x: Math.PI, y: 0, z: 0, duration: 0.5 });
-                            if (card.children[0]) card.children[0].material.emissiveIntensity = 0.4;
-                            activeSelection = null; rearrangeHand();
+            
+            // Interaction logic for Prep Phase vs Counter Phase
+            if (currentPhase === 'PREP') {
+                const handIntersects = raycaster.intersectObjects(playerHand, true);
+                if (handIntersects.length > 0) {
+                    let card = handIntersects[0].object; while (card.parent && !playerHand.includes(card)) card = card.parent;
+                    if (activeSelection && activeSelection.children[0]) activeSelection.children[0].material.emissiveIntensity = 0.8;
+                    activeSelection = card; if (activeSelection.children[0]) activeSelection.children[0].material.emissiveIntensity = 2.5;
+                    return;
+                }
+                if (activeSelection) {
+                    const tableIntersects = raycaster.intersectObjects([floorMesh]);
+                    if (tableIntersects.length > 0) {
+                        const intersect = tableIntersects[0];
+                        if (intersect.point.z > 0.5 && intersect.point.z < 7.0) {
+                            const startX = -(SEVEN - 1) * SLOT_SPACING / 2;
+                            const idx = Math.round((intersect.point.x - startX) / SLOT_SPACING);
+                            if (idx >= 0 && idx < SEVEN && !playerBattlefield[idx]) {
+                                const card = activeSelection; playerHand = playerHand.filter(c => c !== card); playerBattlefield[idx] = card;
+                                gsap.to(card.position, { x: (idx - 3) * SLOT_SPACING, y: 0.1, z: 3.2, duration: 0.5, ease: "power2.inOut" });
+                                gsap.to(card.rotation, { x: Math.PI, y: 0, z: 0, duration: 0.5 });
+                                if (card.children[0]) card.children[0].material.emissiveIntensity = 0.4;
+                                activeSelection = null; rearrangeHand();
+                            }
                         }
                     }
+                }
+            } 
+            else if (currentPhase === 'COUNTER_ALLOCATION') {
+                const allCards = [...playerBattlefield.filter(c => c !== null), ...enemyBattlefield.filter(c => c !== null), ...seals.map(s => s.champion).filter(c => c !== null)];
+                const intersects = raycaster.intersectObjects(allCards, true);
+                if (intersects.length > 0) {
+                    let card = intersects[0].object; while (card.parent && !allCards.includes(card)) card = card.parent;
+                    
+                    if (pendingPowerPool > 0) {
+                        card.userData.powerMarkers++;
+                        pendingPowerPool--;
+                    } else if (pendingWeaknessPool > 0) {
+                        card.userData.weaknessMarkers++;
+                        pendingWeaknessPool--;
+                    }
+                    document.getElementById('power-pool-val').innerText = pendingPowerPool;
+                    document.getElementById('weakness-pool-val').innerText = pendingWeaknessPool;
+                    updateCardVisualMarkers(card);
                 }
             }
         }
@@ -850,21 +804,9 @@
         function onWindowResize() { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); }
         function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
         function updateStepLabel(txt) { const el = document.getElementById('phase-step-label'); el.style.opacity = 0; setTimeout(() => { el.innerText = txt; el.style.opacity = 1; }, 200); }
-        function updateGlobalScores() {
-            const p1 = seals.filter(s => s.alignment === 'PURIFIED').length;
-            const p2 = seals.filter(s => s.alignment === 'CORRUPTED').length;
-            document.getElementById('p1-score').innerText = `${p1} / 7`; document.getElementById('p2-score').innerText = `${p2} / 7`;
-        }
-        function checkVictory() {
-            const p1 = seals.filter(s => s.alignment === 'PURIFIED').length;
-            const p2 = seals.filter(s => s.alignment === 'CORRUPTED').length;
-            if (p1 === 7 || p2 === 7) showGameOver(p1 === 7 ? "THE GREAT ASCENSION" : "THE FINAL ECLIPSE", p1 === 7 ? "Utopia established. The Light prevails." : "The Void consumes all.");
-        }
-        function finalizeGame() {
-            const p1 = seals.filter(s => s.alignment === 'PURIFIED').length;
-            const p2 = seals.filter(s => s.alignment === 'CORRUPTED').length;
-            showGameOver("CYCLE COMPLETE", p1 > p2 ? "Player 1 (Light) controls the majority." : "Player 2 (Darkness) controls the majority.");
-        }
+        function updateGlobalScores() { const p1 = seals.filter(s => s.alignment === 'PURIFIED').length; const p2 = seals.filter(s => s.alignment === 'CORRUPTED').length; document.getElementById('p1-score').innerText = `${p1} / 7`; document.getElementById('p2-score').innerText = `${p2} / 7`; }
+        function checkVictory() { const p1 = seals.filter(s => s.alignment === 'PURIFIED').length; const p2 = seals.filter(s => s.alignment === 'CORRUPTED').length; if (p1 === 7 || p2 === 7) showGameOver(p1 === 7 ? "THE GREAT ASCENSION" : "THE FINAL ECLIPSE", p1 === 7 ? "Utopia established. The Light prevails." : "The Void consumes all."); }
+        function finalizeGame() { const p1 = seals.filter(s => s.alignment === 'PURIFIED').length; const p2 = seals.filter(s => s.alignment === 'CORRUPTED').length; showGameOver("CYCLE COMPLETE", p1 > p2 ? "Player 1 (Light) controls the majority." : "Player 2 (Darkness) controls the majority."); }
         function showGameOver(title, body) { currentPhase = 'GAME_OVER'; document.getElementById('msg-overlay').style.display = 'flex'; document.getElementById('msg-title').innerText = title; document.getElementById('msg-body').innerText = body; }
 
         function animate() {
@@ -875,9 +817,7 @@
                 playerHand.forEach(card => {
                     if (card && card.children && card.children[0]) {
                         const bodyMesh = card.children[0];
-                        if (bodyMesh.material && card !== activeSelection) {
-                            bodyMesh.material.emissiveIntensity = 0.8 + Math.sin(time * 6) * 0.4;
-                        }
+                        if (bodyMesh.material && card !== activeSelection) { bodyMesh.material.emissiveIntensity = 0.8 + Math.sin(time * 6) * 0.4; }
                     }
                 });
             }

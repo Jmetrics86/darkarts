@@ -411,15 +411,52 @@
         }
 
         function enemyReinforce() {
+            // AI Draws 8 Cards to mimic Prep Phase rules
+            const aiHand = [];
+            for (let i = 0; i < 8; i++) {
+                aiHand.push({
+                    power: Math.floor(Math.random() * 8) + 1,
+                    isChampion: Math.random() > 0.75
+                });
+            }
+
+            // Find vacancies and sort them by tactical importance
+            const vacantSlots = [];
             for (let i = 0; i < SEVEN; i++) {
-                if (!enemyBattlefield[i] && Math.random() > 0.4) {
-                    const card = createCard(Math.floor(Math.random()*7)+1, Math.random()>0.8, true);
-                    card.position.copy(enemyDeckMesh.position);
-                    card.rotation.x = Math.PI;
-                    scene.add(card);
-                    enemyBattlefield[i] = card;
-                    gsap.to(card.position, { x: (i - 3) * SLOT_SPACING, y: 0.1, z: -3.2, duration: 0.8, delay: i*0.1 });
-                }
+                if (!enemyBattlefield[i]) vacantSlots.push(i);
+            }
+
+            // Strategic Sorting: Focus on Purified (P1-owned) or Neutral Seals
+            vacantSlots.sort((a, b) => {
+                const score = (idx) => {
+                    const seal = seals[idx];
+                    if (seal.alignment === 'PURIFIED') return 3; // High Priority: Take back control
+                    if (seal.alignment === 'NEUTRAL') return 2;  // Mid Priority: Claim neutral ground
+                    return 1; // Low Priority: Protect existing corruption
+                };
+                return score(b) - score(a);
+            });
+
+            // Deploy cards from hand until slots are full or cards run out
+            for (let i = 0; i < vacantSlots.length && aiHand.length > 0; i++) {
+                const slotIdx = vacantSlots[i];
+                // AI picks its strongest cards for the highest priority slots
+                aiHand.sort((a, b) => b.power - a.power);
+                const cardData = aiHand.shift();
+
+                const card = createCard(cardData.power, cardData.isChampion, true);
+                card.position.copy(enemyDeckMesh.position);
+                card.rotation.x = Math.PI; // Face down
+                scene.add(card);
+                enemyBattlefield[slotIdx] = card;
+
+                gsap.to(card.position, { 
+                    x: (slotIdx - 3) * SLOT_SPACING, 
+                    y: 0.1, 
+                    z: -3.2, 
+                    duration: 0.8, 
+                    delay: i * 0.15 
+                });
             }
         }
 

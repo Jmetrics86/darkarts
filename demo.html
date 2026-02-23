@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Endless Seven - Counter Management Edition</title>
+    <title>Endless Seven - Manifest Edition</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
     <style>
@@ -191,14 +191,14 @@
          */
         const LIGHT_POOL = [
             { name: "The Spinner", faction: "Light", type: "Avatar", power: 9, isChampion: true, ability: "Flip: Gain +1 Power Marker for every Light card currently in play.", markerPower: 0, needsAllocation: true },
-            { name: "The Allotter", faction: "Light", type: "Avatar", power: 9, isChampion: true, ability: "Flip: Destroy card on any Seal. Activate: Destroy any one Marker type." },
+            { name: "The Allotter", faction: "Light", type: "Avatar", power: 9, isChampion: true, ability: "Flip: Destroy card on any Seal.", hasTargetedAbility: true, effect: 'destroy', targetType: 'any' },
             { name: "Prophet", faction: "Light", type: "Avatar", power: 9, isChampion: true, ability: "Passive: Prevents Purified Seals from being Corrupted while in play." },
-            { name: "The Inevitable", faction: "Light", type: "Avatar", power: 9, isChampion: true, ability: "Post-Combat: After destroying a creature, gain 2 Power Markers." },
+            { name: "The Inevitable", faction: "Light", type: "Avatar", power: 9, isChampion: true, ability: "Post-Combat: After destroying a creature, gain 2 Power Markers.", markerPower: 2, needsAllocation: true },
             { name: "Saint Michael", faction: "Light", type: "Avatar", power: 10, isChampion: true, ability: "Win Con: Activate with 5+ Seals. Final Act: Target battled card loses 3 Power." },
             { name: "Martyr", faction: "Light", type: "Avatar", power: 9, isChampion: true, ability: "Limbo Trigger: Purify one Neutral Seal without a Champion." },
             { name: "The Almighty", faction: "Light", type: "God", power: 15, isChampion: true, ability: "Flip: Purify a Corrupted Seal without a Champion. Activate: Destroy any one Marker type." },
             { name: "Archangel", faction: "Celestial", type: "Creature", power: 2, isChampion: false, ability: "Flip: Nullify enemy Flip ability here." },
-            { name: "Cherubim", faction: "Celestial", type: "Creature", power: 4, isChampion: false, ability: "Flip: Return target creature in play to owner's deck." },
+            { name: "Cherubim", faction: "Celestial", type: "Creature", power: 4, isChampion: false, ability: "Flip: Return target creature in play to owner's deck.", hasTargetedAbility: true, effect: 'return', targetType: 'creature' },
             { name: "Fallen One", faction: "Celestial", type: "Creature", power: 6, isChampion: false, ability: "Haste: Resolve battle before Flip." },
             { name: "Herald", faction: "Celestial", type: "Creature", power: 5, isChampion: false, ability: "Flip: Gain Power Markers equal to the top card of your deck.", markerPower: 5, needsAllocation: true },
             { name: "Nephilim", faction: "Celestial", type: "Creature", power: 3, isChampion: false, ability: "Flip: Battle invulnerability this round." },
@@ -215,7 +215,7 @@
 
         const DARK_POOL = [
             { name: "Death", faction: "Darkness", type: "Horseman", power: 9, isChampion: true, ability: "Flip: Target card loses 5 Power.", markerWeakness: 5, needsAllocation: true },
-            { name: "Famine", faction: "Darkness", type: "Horseman", power: 9, isChampion: true, ability: "Flip: Destroy any card in play." },
+            { name: "Famine", faction: "Darkness", type: "Horseman", power: 9, isChampion: true, ability: "Flip: Destroy any card in play.", hasTargetedAbility: true, effect: 'destroy', targetType: 'any' },
             { name: "Pestilence", faction: "Darkness", type: "Horseman", power: 9, isChampion: true, ability: "Flip: All enemy creatures lose 2 Power.", markerWeakness: 2, needsAllocation: true },
             { name: "War", faction: "Darkness", type: "Horseman", power: 9, isChampion: true, ability: "Post-Combat: Gain 3 Power Markers after destroying a creature.", markerPower: 3, needsAllocation: true },
             { name: "Lilith", faction: "Darkness", type: "Avatar", power: 10, isChampion: true, ability: "Win Con: Activate with 5+ Seals." },
@@ -229,10 +229,10 @@
             { name: "Lust", faction: "Daemon", type: "Creature", power: 2, isChampion: false, ability: "Flip: Forced mutual sacrifice." },
             { name: "Gluttony", faction: "Daemon", type: "Creature", power: 1, isChampion: false, ability: "Flip: Siphon all Power Markers." },
             { name: "Lord", faction: "Vampyre", type: "Creature", power: 7, isChampion: false, ability: "Flip: Gain 1 Power Marker for each Vampyre.", markerPower: 1, needsAllocation: true },
-            { name: "Duke", faction: "Vampyre", type: "Creature", power: 6, isChampion: false, ability: "Flip: Card across loses 2 Power.", markerWeakness: 2, needsAllocation: true },
+            { name: "Duke", faction: "Vampyre", type: "Creature", power: 6, isChampion: false, ability: "Flip: Spin creature to top of deck. Passive: Friendly cards count as Vampyre." },
             { name: "Elder", faction: "Vampyre", type: "Creature", power: 5, isChampion: false, ability: "Haste: Resolve combat first." },
-            { name: "Noble", faction: "Vampyre", type: "Creature", power: 4, isChampion: false, ability: "Flip: Target card loses 2 Power.", markerWeakness: 2, needsAllocation: true },
-            { name: "Regent", faction: "Vampyre", type: "Creature", power: 3, isChampion: false, ability: "Flip: Change Influence of empty Seal." },
+            { name: "Noble", faction: "Vampyre", type: "Creature", power: 4, isChampion: false, ability: "Flip: Destroy one creature.", hasTargetedAbility: true, effect: 'destroy', targetType: 'creature' },
+            { name: "Regent", faction: "Vampyre", type: "Creature", power: 3, isChampion: false, ability: "Flip: Change Influence of any Seal without a Champion." },
             { name: "Baron", faction: "Vampyre", type: "Creature", power: 2, isChampion: false, ability: "Flip: Nullify Flip here." },
             { name: "Fledgeling", faction: "Vampyre", type: "Creature", power: 1, isChampion: false, ability: "Flip: Gain 3 Power Markers.", markerPower: 3, needsAllocation: true }
         ];
@@ -263,10 +263,11 @@
         let activeSelection = null;
         let isProcessing = false;
 
-        // Counter State
+        // Counter & Ability State
         let pendingPowerPool = 0;
         let pendingWeaknessPool = 0;
-        let allocationCallback = null;
+        let pendingAbilityData = null; // { source, effect, targetType }
+        let resolutionCallback = null;
 
         let playerDeckMesh, enemyDeckMesh, playerLimboMesh, enemyLimboMesh, floorMesh;
 
@@ -412,8 +413,12 @@
             const canvas = document.createElement('canvas');
             canvas.width = 256; canvas.height = 128;
             const ctx = canvas.getContext('2d');
-            ctx.fillStyle = 'white'; ctx.font = 'bold 44px Cinzel'; ctx.textAlign = 'center'; ctx.fillText(text, 128, 48);
-            ctx.font = 'bold 36px Arial'; ctx.fillText("--", 128, 90);
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 44px Cinzel';
+            ctx.textAlign = 'center';
+            ctx.fillText(text, 128, 48);
+            ctx.font = 'bold 36px Arial';
+            ctx.fillText("--", 128, 90);
             const tex = new THREE.CanvasTexture(canvas);
             const label = new THREE.Mesh(new THREE.PlaneGeometry(3.5, 1.75), new THREE.MeshBasicMaterial({ map: tex, transparent: true, color }));
             label.rotation.x = -Math.PI/2; label.position.y = 0.8;
@@ -425,8 +430,12 @@
             if (!mesh.userData.labelCanvas) return;
             const ctx = mesh.userData.labelCanvas.getContext('2d');
             ctx.clearRect(0,0,256,128);
-            ctx.fillStyle = 'white'; ctx.font = 'bold 44px Cinzel'; ctx.textAlign = 'center'; ctx.fillText(mesh.userData.labelText, 128, 48);
-            ctx.font = 'bold 40px Arial'; ctx.fillText(count, 128, 95);
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 44px Cinzel';
+            ctx.textAlign = 'center';
+            ctx.fillText(mesh.userData.labelText, 128, 48);
+            ctx.font = 'bold 40px Arial';
+            ctx.fillText(count, 128, 95);
             mesh.userData.labelTexture.needsUpdate = true;
         }
 
@@ -454,29 +463,24 @@
             label.rotation.x = -Math.PI/2; label.position.y = 0.08;
             group.add(label);
 
-            // Counter Containers (Visual)
             const pMark = new THREE.Group(); pMark.position.set(-0.8, 0.1, 1.2); group.add(pMark);
             const wMark = new THREE.Group(); wMark.position.set(0.8, 0.1, 1.2); group.add(wMark);
 
-            group.userData = { ...data, isEnemy, faceUp: false, powerMarkers: 0, weaknessMarkers: 0, pMesh: pMark, wMesh: wMark };
+            group.userData = { ...data, isEnemy, faceUp: false, powerMarkers: 0, weaknessMarkers: 0, pMesh: pMark, wMesh: wMark, isInvincible: false };
             return group;
         }
 
         function updateCardVisualMarkers(card) {
             const ud = card.userData;
-            // Clear existing
             while(ud.pMesh.children.length > 0) ud.pMesh.remove(ud.pMesh.children[0]);
             while(ud.wMesh.children.length > 0) ud.wMesh.remove(ud.wMesh.children[0]);
-
             for(let i=0; i<ud.powerMarkers; i++) {
                 const dot = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), new THREE.MeshBasicMaterial({ color: 0x00f2ff }));
-                dot.position.y = i * 0.15;
-                ud.pMesh.add(dot);
+                dot.position.y = i * 0.15; ud.pMesh.add(dot);
             }
             for(let i=0; i<ud.weaknessMarkers; i++) {
                 const dot = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), new THREE.MeshBasicMaterial({ color: 0xff0044 }));
-                dot.position.y = i * 0.15;
-                ud.wMesh.add(dot);
+                dot.position.y = i * 0.15; ud.wMesh.add(dot);
             }
         }
 
@@ -573,6 +577,13 @@
                 currentRound++; document.getElementById('round-indicator').innerText = `ROUND ${currentRound}`;
                 gsap.to(camera.position, { x: 0, y: 28, z: 32, duration: 1.5, ease: "power2.inOut" });
                 gsap.to(cameraTarget, { x: 0, y: 0, z: -2, duration: 1.5, ease: "power2.inOut" });
+                
+                // End of round cleanup for temporary effects
+                const allBoardCards = [...playerBattlefield, ...enemyBattlefield, ...seals.map(s => s.champion)].filter(c => c !== null);
+                allBoardCards.forEach(c => {
+                    if (c.userData.ability.includes("round")) c.userData.isInvincible = false;
+                });
+
                 if (currentRound > 3) finalizeGame();
                 else { isProcessing = false; startPrepPhase(); }
             }
@@ -589,43 +600,84 @@
             let pCard = playerBattlefield[idx];
             let eCard = enemyBattlefield[idx];
             
+            // Step A: The Flip
             updateStepLabel("Step A: The Flip");
-            if (pCard) gsap.to(pCard.rotation, { x: 0, duration: 0.5 });
-            if (eCard) gsap.to(eCard.rotation, { x: 0, duration: 0.5 });
-            await sleep(800);
+            const pFlipping = pCard && !pCard.userData.faceUp;
+            const eFlipping = eCard && !eCard.userData.faceUp;
 
-            // Step B: Counter Management
-            updateStepLabel("Step B: Counter Allocation");
-            if (pCard && pCard.userData.needsAllocation) {
-                await allocateCounters(pCard, false);
+            if (pFlipping) gsap.to(pCard.rotation, { x: 0, duration: 0.5 });
+            if (eFlipping) gsap.to(eCard.rotation, { x: 0, duration: 0.5 });
+            if (pFlipping || eFlipping) await sleep(800);
+
+            // Step B: Counter & Ability Management (TRIGGER ON FLIP ONLY)
+            updateStepLabel("Step B: Flip Abilities");
+            if (pFlipping) {
+                if (pCard.userData.ability.toLowerCase().includes("invulnerability")) pCard.userData.isInvincible = true;
+                if (pCard.userData.needsAllocation) await allocateCounters(pCard, false);
+                if (pCard.userData.hasTargetedAbility) await handleTargetedAbility(pCard, false);
             }
-            if (eCard && eCard.userData.needsAllocation) {
-                await allocateCounters(eCard, true);
+            if (eFlipping) {
+                if (eCard.userData.ability.toLowerCase().includes("invulnerability")) eCard.userData.isInvincible = true;
+                if (eCard.userData.needsAllocation) await allocateCounters(eCard, true);
+                if (eCard.userData.hasTargetedAbility) await handleTargetedAbility(eCard, true);
             }
+            
+            if (pCard) pCard.userData.faceUp = true;
+            if (eCard) eCard.userData.faceUp = true;
 
             updateStepLabel("Step C: Battle");
+            // Standard battle logic with INVINCIBILITY check
             if (pCard && seal.champion && seal.champion.userData.isEnemy) {
                 const pPow = pCard.userData.power + pCard.userData.powerMarkers - pCard.userData.weaknessMarkers;
                 const cPow = seal.champion.userData.power + seal.champion.userData.powerMarkers - seal.champion.userData.weaknessMarkers;
-                if (pPow > cPow) { destroyToLimbo(seal.champion, true, idx, true); seal.champion = null; }
-                else if (pPow < cPow) { destroyToLimbo(pCard, false, idx); pCard = null; }
-                else { destroyToLimbo(seal.champion, true, idx, true); destroyToLimbo(pCard, false, idx); seal.champion = null; pCard = null; }
+                if (pPow > cPow) {
+                    if (!seal.champion.userData.isInvincible) {
+                        destroyToLimbo(seal.champion, true, idx, true);
+                        seal.champion = null;
+                    }
+                } else if (pPow < cPow) {
+                    if (!pCard.userData.isInvincible) {
+                        destroyToLimbo(pCard, false, idx);
+                        pCard = null;
+                    }
+                } else {
+                    if (!seal.champion.userData.isInvincible) { destroyToLimbo(seal.champion, true, idx, true); seal.champion = null; }
+                    if (!pCard.userData.isInvincible) { destroyToLimbo(pCard, false, idx); pCard = null; }
+                }
                 await sleep(500);
             }
             if (eCard && seal.champion && !seal.champion.userData.isEnemy) {
                 const ePow = eCard.userData.power + eCard.userData.powerMarkers - eCard.userData.weaknessMarkers;
                 const cPow = seal.champion.userData.power + seal.champion.userData.powerMarkers - seal.champion.userData.weaknessMarkers;
-                if (ePow > cPow) { destroyToLimbo(seal.champion, false, idx, true); seal.champion = null; }
-                else if (ePow < cPow) { destroyToLimbo(eCard, true, idx); eCard = null; }
-                else { destroyToLimbo(seal.champion, false, idx, true); destroyToLimbo(eCard, true, idx); seal.champion = null; eCard = null; }
+                if (ePow > cPow) {
+                    if (!seal.champion.userData.isInvincible) {
+                        destroyToLimbo(seal.champion, false, idx, true);
+                        seal.champion = null;
+                    }
+                } else if (ePow < cPow) {
+                    if (!eCard.userData.isInvincible) {
+                        destroyToLimbo(eCard, true, idx);
+                        eCard = null;
+                    }
+                } else {
+                    if (!seal.champion.userData.isInvincible) { destroyToLimbo(seal.champion, false, idx, true); seal.champion = null; }
+                    if (!eCard.userData.isInvincible) { destroyToLimbo(eCard, true, idx); eCard = null; }
+                }
                 await sleep(500);
             }
             if (pCard && eCard) {
                 const pPow = pCard.userData.power + pCard.userData.powerMarkers - pCard.userData.weaknessMarkers;
                 const ePow = eCard.userData.power + eCard.userData.powerMarkers - eCard.userData.weaknessMarkers;
-                if (pPow > ePow) { destroyToLimbo(eCard, true, idx); eCard = null; await handlePostBattleSiege(idx, pPow, true); }
-                else if (ePow > pPow) { destroyToLimbo(pCard, false, idx); pCard = null; await handlePostBattleSiege(idx, ePow, false); }
-                else { destroyToLimbo(pCard, false, idx); destroyToLimbo(eCard, true, idx); pCard = null; eCard = null; }
+                if (pPow > ePow) {
+                    if (!eCard.userData.isInvincible) { destroyToLimbo(eCard, true, idx); eCard = null; }
+                    await handlePostBattleSiege(idx, pPow, true);
+                } else if (ePow > pPow) {
+                    if (!pCard.userData.isInvincible) { destroyToLimbo(pCard, false, idx); pCard = null; }
+                    await handlePostBattleSiege(idx, ePow, false);
+                } else {
+                    if (!pCard.userData.isInvincible) { destroyToLimbo(pCard, false, idx); pCard = null; }
+                    if (!eCard.userData.isInvincible) { destroyToLimbo(eCard, true, idx); eCard = null; }
+                }
             } else if (pCard) { await handlePostBattleSiege(idx, pCard.userData.power + pCard.userData.powerMarkers - pCard.userData.weaknessMarkers, true); }
             else if (eCard) { await handlePostBattleSiege(idx, eCard.userData.power + eCard.userData.powerMarkers - eCard.userData.weaknessMarkers, false); }
             else { await handlePostBattleSiege(idx, 0, true); }
@@ -641,9 +693,7 @@
             const data = card.userData;
             pendingPowerPool = data.markerPower || 0;
             pendingWeaknessPool = data.markerWeakness || 0;
-
             if (isAI) {
-                // AI Logic: Put power on own unit/champion, weakness on enemy
                 for (let i = 0; i < pendingPowerPool; i++) {
                     const targets = enemyBattlefield.filter(c => c !== null);
                     if (targets.length > 0) { targets[0].userData.powerMarkers++; updateCardVisualMarkers(targets[0]); }
@@ -659,21 +709,74 @@
                 document.getElementById('counter-overlay').style.display = 'block';
                 document.getElementById('power-pool-val').innerText = pendingPowerPool;
                 document.getElementById('weakness-pool-val').innerText = pendingWeaknessPool;
+                return new Promise((resolve) => { resolutionCallback = resolve; });
+            }
+        }
+
+        async function handleTargetedAbility(source, isAI) {
+            const data = source.userData;
+            pendingAbilityData = { source, effect: data.effect, targetType: data.targetType };
+
+            if (isAI) {
+                const pUnits = [
+                    ...playerBattlefield.filter(c => c !== null),
+                    ...seals.filter(s => s.champion && !s.champion.userData.isEnemy).map(s => s.champion)
+                ];
+                if (pUnits.length > 0) {
+                    pUnits.sort((a,b) => b.userData.power - a.userData.power);
+                    applyAbilityEffect(pUnits[0]);
+                }
+                pendingAbilityData = null;
+                return Promise.resolve();
+            } else {
+                currentPhase = 'ABILITY_TARGETING';
+                document.getElementById('instruction-text').innerText = `Select a target to ${data.effect.toUpperCase()}.`;
+                return new Promise((resolve) => { resolutionCallback = resolve; });
+            }
+        }
+
+        function applyAbilityEffect(target) {
+            if (!pendingAbilityData) return;
+            const { effect, source } = pendingAbilityData;
+            
+            // Only affect targets that ARE NOT invincible
+            if (target.userData.isInvincible) return;
+
+            if (effect === 'destroy') {
+                const targetIdx = enemyBattlefield.indexOf(target);
+                const pTargetIdx = playerBattlefield.indexOf(target);
+                const sealTarget = seals.find(s => s.champion === target);
+
+                if (sealTarget) {
+                    destroyToLimbo(target, target.userData.isEnemy, sealTarget.index, true);
+                    sealTarget.champion = null;
+                } else if (targetIdx !== -1) {
+                    destroyToLimbo(target, true, targetIdx);
+                } else if (pTargetIdx !== -1) {
+                    destroyToLimbo(target, false, pTargetIdx);
+                }
+            } else if (effect === 'return') {
+                const targetIdx = enemyBattlefield.indexOf(target);
+                const pTargetIdx = playerBattlefield.indexOf(target);
+                const sealTarget = seals.find(s => s.champion === target);
+
+                if (sealTarget) sealTarget.champion = null;
+                else if (targetIdx !== -1) enemyBattlefield[targetIdx] = null;
+                else if (pTargetIdx !== -1) playerBattlefield[pTargetIdx] = null;
+
+                const ownerDeck = target.userData.isEnemy ? enemyDeck : playerDeck;
+                ownerDeck.push({ ...target.userData });
                 
-                return new Promise((resolve) => {
-                    allocationCallback = resolve;
-                });
+                gsap.to(target.position, { y: 10, duration: 0.5, onComplete: () => scene.remove(target) });
+                updateUICounters();
             }
         }
 
         function finishCounters() {
-            if (pendingPowerPool > 0 || pendingWeaknessPool > 0) {
-                // Warning logic could go here
-            }
             document.getElementById('counter-overlay').style.display = 'none';
             currentPhase = 'RESOLUTION';
-            if (allocationCallback) allocationCallback();
-            allocationCallback = null;
+            if (resolutionCallback) resolutionCallback();
+            resolutionCallback = null;
         }
 
         async function handlePostBattleSiege(idx, attackerPower, isPlayer) {
@@ -681,9 +784,19 @@
             const attacker = isPlayer ? playerBattlefield[idx] : enemyBattlefield[idx];
             if (seal.champion && seal.champion.userData.isEnemy === isPlayer) {
                 const champPow = seal.champion.userData.power + seal.champion.userData.powerMarkers - seal.champion.userData.weaknessMarkers;
-                if (attackerPower > champPow) { destroyToLimbo(seal.champion, !isPlayer, idx, true); seal.champion = null; claimSeal(idx, isPlayer ? 'PURIFIED' : 'CORRUPTED'); }
-                else if (attackerPower < champPow) { if (attacker) destroyToLimbo(attacker, !isPlayer, idx); }
-                else if (attackerPower === champPow && attackerPower > 0) { destroyToLimbo(seal.champion, !isPlayer, idx, true); if (attacker) destroyToLimbo(attacker, !isPlayer, idx); seal.champion = null; claimSeal(idx, 'NEUTRAL'); }
+                if (attackerPower > champPow) {
+                    if (!seal.champion.userData.isInvincible) {
+                        destroyToLimbo(seal.champion, !isPlayer, idx, true);
+                        seal.champion = null;
+                    }
+                    claimSeal(idx, isPlayer ? 'PURIFIED' : 'CORRUPTED');
+                } else if (attackerPower < champPow) {
+                    if (attacker && !attacker.userData.isInvincible) destroyToLimbo(attacker, !isPlayer, idx);
+                } else if (attackerPower === champPow && attackerPower > 0) {
+                    if (!seal.champion.userData.isInvincible) { destroyToLimbo(seal.champion, !isPlayer, idx, true); seal.champion = null; }
+                    if (attacker && !attacker.userData.isInvincible) destroyToLimbo(attacker, !isPlayer, idx);
+                    claimSeal(idx, 'NEUTRAL');
+                }
             } else if (!seal.champion && attackerPower > 0) { claimSeal(idx, isPlayer ? 'PURIFIED' : 'CORRUPTED'); }
         }
 
@@ -743,7 +856,11 @@
                     selectedObject = card; tooltip.style.opacity = 1; tooltip.style.left = event.clientX + 20 + 'px'; tooltip.style.top = event.clientY - 40 + 'px';
                     const data = card.userData;
                     const effPow = data.power + data.powerMarkers - data.weaknessMarkers;
-                    tooltip.innerHTML = `<div style="font-weight: bold; font-size: 1.1rem; margin-bottom: 5px;">${data.name}</div><div style="color: ${data.isEnemy ? '#f88' : '#8ff'}; font-size: 0.7rem; letter-spacing: 1px; margin-bottom: 5px;">${data.faction.toUpperCase()} / ${data.isChampion ? 'CHAMPION' : data.type.toUpperCase()}</div><div style="font-size: 1.2rem; font-weight: bold; margin: 10px 0;">EFF. POWER: ${effPow} <span style="font-size: 0.7rem; font-weight: normal; color: #aaa;">(${data.power} +${data.powerMarkers} -${data.weaknessMarkers})</span></div><div class="tooltip-ability">${data.ability}</div>`;
+                    tooltip.innerHTML = `
+                        <div style="font-weight: bold; font-size: 1.1rem; margin-bottom: 5px;">${data.name} ${data.isInvincible ? '<span style="color:cyan">[INVINCIBLE]</span>' : ''}</div>
+                        <div style="color: ${data.isEnemy ? '#f88' : '#8ff'}; font-size: 0.7rem; letter-spacing: 1px; margin-bottom: 5px;">${data.faction.toUpperCase()} / ${data.isChampion ? 'CHAMPION' : data.type.toUpperCase()}</div>
+                        <div style="font-size: 1.2rem; font-weight: bold; margin: 10px 0;">EFF. POWER: ${effPow} <span style="font-size: 0.7rem; font-weight: normal; color: #aaa;">(${data.power} +${data.powerMarkers} -${data.weaknessMarkers})</span></div>
+                        <div class="tooltip-ability">${data.ability}</div>`;
                 }
             } else {
                 if (selectedObject && playerHand.includes(selectedObject)) gsap.to(selectedObject.position, { y: tuning.height, duration: 0.2 });
@@ -753,8 +870,6 @@
 
         function onMouseDown() {
             raycaster.setFromCamera(mouse, camera);
-            
-            // Interaction logic for Prep Phase vs Counter Phase
             if (currentPhase === 'PREP') {
                 const handIntersects = raycaster.intersectObjects(playerHand, true);
                 if (handIntersects.length > 0) {
@@ -780,23 +895,28 @@
                         }
                     }
                 }
-            } 
-            else if (currentPhase === 'COUNTER_ALLOCATION') {
-                const allCards = [...playerBattlefield.filter(c => c !== null), ...enemyBattlefield.filter(c => c !== null), ...seals.map(s => s.champion).filter(c => c !== null)];
-                const intersects = raycaster.intersectObjects(allCards, true);
+            } else if (currentPhase === 'COUNTER_ALLOCATION') {
+                const allBoard = [...playerBattlefield, ...enemyBattlefield, ...seals.map(s => s.champion)].filter(c => c !== null);
+                const intersects = raycaster.intersectObjects(allBoard, true);
                 if (intersects.length > 0) {
-                    let card = intersects[0].object; while (card.parent && !allCards.includes(card)) card = card.parent;
-                    
-                    if (pendingPowerPool > 0) {
-                        card.userData.powerMarkers++;
-                        pendingPowerPool--;
-                    } else if (pendingWeaknessPool > 0) {
-                        card.userData.weaknessMarkers++;
-                        pendingWeaknessPool--;
-                    }
+                    let card = intersects[0].object; while (card.parent && !allBoard.includes(card)) card = card.parent;
+                    if (pendingPowerPool > 0) { card.userData.powerMarkers++; pendingPowerPool--; }
+                    else if (pendingWeaknessPool > 0) { card.userData.weaknessMarkers++; pendingWeaknessPool--; }
                     document.getElementById('power-pool-val').innerText = pendingPowerPool;
                     document.getElementById('weakness-pool-val').innerText = pendingWeaknessPool;
                     updateCardVisualMarkers(card);
+                }
+            } else if (currentPhase === 'ABILITY_TARGETING') {
+                const allBoard = [...playerBattlefield, ...enemyBattlefield, ...seals.map(s => s.champion)].filter(c => c !== null);
+                const intersects = raycaster.intersectObjects(allBoard, true);
+                if (intersects.length > 0) {
+                    let card = intersects[0].object; while (card.parent && !allBoard.includes(card)) card = card.parent;
+                    applyAbilityEffect(card);
+                    currentPhase = 'RESOLUTION';
+                    pendingAbilityData = null;
+                    document.getElementById('instruction-text').innerText = "";
+                    if (resolutionCallback) resolutionCallback();
+                    resolutionCallback = null;
                 }
             }
         }
@@ -823,7 +943,6 @@
             }
             if (renderer && scene && camera) renderer.render(scene, camera);
         }
-
         window.onload = init;
     </script>
 </body>

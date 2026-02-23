@@ -50,7 +50,6 @@
 
         .action-btn-small { padding: 8px 20px; font-size: 0.75rem; margin-top: 5px; width: 100%; }
 
-        /* Selection & End Overlays */
         #selection-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #050508; z-index: 1000;
@@ -71,7 +70,6 @@
         .side-choice h2 { margin: 15px 0; letter-spacing: 4px; }
         .side-choice p { font-size: 0.7rem; color: #888; font-style: italic; line-height: 1.5; }
 
-        /* Tuning Widget */
         .widget-panel { 
             position: absolute; right: 20px; top: 50%; transform: translateY(-50%); 
             display: flex; flex-direction: column; gap: 15px; pointer-events: auto; 
@@ -235,7 +233,7 @@
             { name: "Saint Michael", faction: "Light", type: "Avatar", power: 10, isChampion: true, ability: "Win Con: Activate with 5+ Seals. Final Act: Target battled card loses 3 Power." },
             { name: "Martyr", faction: "Light", type: "Avatar", power: 9, isChampion: true, ability: "Limbo Trigger: Purify one Neutral Seal without a Champion." },
             { name: "The Almighty", faction: "Light", type: "God", power: 15, isChampion: true, ability: "Flip: Purify a Corrupted Seal without a Champion. Activate: Destroy any one Marker type." },
-            { name: "Archangel", faction: "Celestial", type: "Creature", power: 2, isChampion: false, ability: "Flip: Nullify enemy Flip ability here." },
+            { name: "Archangel", faction: "Celestial", type: "Creature", power: 2, isChampion: false, ability: "Flip: Reveal enemy card and Nullify its Flip ability.", hasNullify: true },
             { name: "Cherubim", faction: "Celestial", type: "Creature", power: 4, isChampion: false, ability: "Flip: Return target creature in play to owner's deck.", hasTargetedAbility: true, effect: 'return', targetType: 'creature' },
             { name: "Fallen One", faction: "Celestial", type: "Creature", power: 6, isChampion: false, ability: "Haste: Resolve battle before Flip." },
             { name: "Herald", faction: "Celestial", type: "Creature", power: 5, isChampion: false, ability: "Flip: Gain Power Markers equal to the top card of your deck.", markerPower: 5, needsAllocation: true },
@@ -262,16 +260,16 @@
             { name: "Wrath", faction: "Daemon", type: "Creature", power: 7, isChampion: false, ability: "Flip: Enemy loses 1 Power.", markerWeakness: 1, needsAllocation: true },
             { name: "Pride", faction: "Daemon", type: "Creature", power: 6, isChampion: false, ability: "Flip: Card across loses 3 Power.", markerWeakness: 3, needsAllocation: true },
             { name: "Greed", faction: "Daemon", type: "Creature", power: 5, isChampion: false, ability: "Flip: Battle invulnerability." },
-            { name: "Sloth", faction: "Daemon", type: "Creature", power: 4, isChampion: false, ability: "Passive: Ability immune. Flip: -3 Weakness. Action: Destroy creature with Weakness." },
+            { name: "Sloth", faction: "Daemon", type: "Creature", power: 4, isChampion: false, ability: "Passive: Ability immune. Flip: -3 Weakness." },
             { name: "Envy", faction: "Daemon", type: "Creature", power: 3, isChampion: false, ability: "Flip: Target card loses 3 Power.", markerWeakness: 3, needsAllocation: true },
             { name: "Lust", faction: "Daemon", type: "Creature", power: 2, isChampion: false, ability: "Flip: Forced mutual sacrifice." },
-            { name: "Gluttony", faction: "Daemon", type: "Creature", power: 1, isChampion: false, ability: "Flip: Siphon all Power Markers." },
+            { name: "Gluttony", faction: "Daemon", type: "Creature", power: 1, isChampion: false, ability: "Flip: Siphon all Power and Weakness Markers in play to self.", hasGlobalAbility: true, effect: 'siphon_all' },
             { name: "Lord", faction: "Vampyre", type: "Creature", power: 7, isChampion: false, ability: "Flip: Gain 1 Power Marker for each Vampyre.", markerPower: 1, needsAllocation: true },
-            { name: "Duke", faction: "Vampyre", type: "Creature", power: 6, isChampion: false, ability: "Flip: Spin creature to top of deck. Passive: Friendly cards count as Vampyre." },
+            { name: "Duke", faction: "Vampyre", type: "Creature", power: 6, isChampion: false, ability: "Flip: Spin creature to top of deck. Passive: Friendly count as Vampyre." },
             { name: "Elder", faction: "Vampyre", type: "Creature", power: 5, isChampion: false, ability: "Haste: Resolve combat first." },
             { name: "Noble", faction: "Vampyre", type: "Creature", power: 4, isChampion: false, ability: "Flip: Destroy one creature.", hasTargetedAbility: true, effect: 'destroy', targetType: 'creature' },
             { name: "Regent", faction: "Vampyre", type: "Creature", power: 3, isChampion: false, ability: "Flip: Change Influence of any Seal without a Champion." },
-            { name: "Baron", faction: "Vampyre", type: "Creature", power: 2, isChampion: false, ability: "Flip: Nullify Flip here." },
+            { name: "Baron", faction: "Vampyre", type: "Creature", power: 2, isChampion: false, ability: "Flip: Nullify Flip here.", hasNullify: true },
             { name: "Fledgeling", faction: "Vampyre", type: "Creature", power: 1, isChampion: false, ability: "Flip: Gain 3 Power Markers.", markerPower: 3, needsAllocation: true }
         ];
 
@@ -404,7 +402,8 @@
                 seals.push({ mesh: hub, light, alignment: 'NEUTRAL', champion: null, index: i });
                 createGridSlot(x, 3.2, 0x333333); createGridSlot(x, -3.2, 0x333333);
             }
-            const deckOffset = startX - 4; const limboOffset = (startX + (SEVEN - 1) * SLOT_SPACING) + 4;
+            const startOriginX = -(SEVEN - 1) * SLOT_SPACING / 2;
+            const deckOffset = startOriginX - 4; const limboOffset = (startX + (SEVEN - 1) * SLOT_SPACING) + 4;
             playerDeckMesh = createPile(0x0077aa); playerDeckMesh.position.set(deckOffset, 0.2, 6); scene.add(playerDeckMesh); addLabel(playerDeckMesh, "DECK", 0x00f2ff);
             enemyDeckMesh = createPile(0xaa2233); enemyDeckMesh.position.set(deckOffset, 0.2, -6); scene.add(enemyDeckMesh); addLabel(enemyDeckMesh, "DECK", 0xff0044);
             playerLimboMesh = createPile(0x444444); playerLimboMesh.position.set(limboOffset, 0.05, 6); scene.add(playerLimboMesh); addLabel(playerLimboMesh, "LIMBO", 0xcccccc);
@@ -458,23 +457,46 @@
             const tex = new THREE.CanvasTexture(canvas);
             const label = new THREE.Mesh(new THREE.PlaneGeometry(CARD_W * 0.95, CARD_H * 0.95), new THREE.MeshBasicMaterial({ map: tex, transparent: true }));
             label.rotation.x = -Math.PI/2; label.position.y = 0.08; group.add(label);
-            const pMark = new THREE.Group(); pMark.position.set(-0.8, 0.1, 1.2); group.add(pMark);
-            const wMark = new THREE.Group(); wMark.position.set(0.8, 0.1, 1.2); group.add(wMark);
-            group.userData = { ...data, isEnemy, faceUp: false, powerMarkers: 0, weaknessMarkers: 0, pMesh: pMark, wMesh: wMark, isInvincible: false };
+
+            const pCanvas = document.createElement('canvas'); pCanvas.width = 128; pCanvas.height = 128;
+            const pTex = new THREE.CanvasTexture(pCanvas);
+            const pMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 0.8), new THREE.MeshBasicMaterial({ map: pTex, transparent: true }));
+            pMesh.rotation.x = -Math.PI/2; pMesh.position.set(-0.7, 0.09, 1.2);
+            group.add(pMesh);
+
+            const wCanvas = document.createElement('canvas'); wCanvas.width = 128; wCanvas.height = 128;
+            const wTex = new THREE.CanvasTexture(wCanvas);
+            const wMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 0.8), new THREE.MeshBasicMaterial({ map: wTex, transparent: true }));
+            wMesh.rotation.x = -Math.PI/2; wMesh.position.set(0.7, 0.09, 1.2);
+            group.add(wMesh);
+
+            group.userData = { 
+                ...data, isEnemy, faceUp: false, powerMarkers: 0, weaknessMarkers: 0, 
+                pMesh: pMesh, wMesh: wMesh, pCanvas, pTex, wCanvas, wTex,
+                isInvincible: false, isSuppressed: false 
+            };
             return group;
         }
 
         function updateCardVisualMarkers(card) {
-            const ud = card.userData; while(ud.pMesh.children.length > 0) ud.pMesh.remove(ud.pMesh.children[0]);
-            while(ud.wMesh.children.length > 0) ud.wMesh.remove(ud.wMesh.children[0]);
-            for(let i=0; i<ud.powerMarkers; i++) {
-                const dot = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), new THREE.MeshBasicMaterial({ color: 0x00f2ff }));
-                dot.position.y = i * 0.15; ud.pMesh.add(dot);
-            }
-            for(let i=0; i<ud.weaknessMarkers; i++) {
-                const dot = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), new THREE.MeshBasicMaterial({ color: 0xff0044 }));
-                dot.position.y = i * 0.15; ud.wMesh.add(dot);
-            }
+            const ud = card.userData;
+            const pCtx = ud.pCanvas.getContext('2d');
+            pCtx.clearRect(0,0,128,128);
+            if (ud.powerMarkers > 0) {
+                pCtx.fillStyle = '#00f2ff'; pCtx.font = 'bold 80px Cinzel'; pCtx.textAlign = 'center';
+                pCtx.shadowColor = 'rgba(0,242,255,0.8)'; pCtx.shadowBlur = 15; pCtx.fillText("+" + ud.powerMarkers, 64, 90);
+                ud.pMesh.visible = true;
+            } else ud.pMesh.visible = false;
+            ud.pTex.needsUpdate = true;
+
+            const wCtx = ud.wCanvas.getContext('2d');
+            wCtx.clearRect(0,0,128,128);
+            if (ud.weaknessMarkers > 0) {
+                wCtx.fillStyle = '#ff0044'; wCtx.font = 'bold 80px Cinzel'; wCtx.textAlign = 'center';
+                wCtx.shadowColor = 'rgba(255,0,68,0.8)'; wCtx.shadowBlur = 15; wCtx.fillText("-" + ud.weaknessMarkers, 64, 90);
+                ud.wMesh.visible = true;
+            } else ud.wMesh.visible = false;
+            ud.wTex.needsUpdate = true;
         }
 
         async function startPrepPhase() {
@@ -493,7 +515,7 @@
                 updateUICounters(); await sleep(100);
             }
             await sleep(300); updateStepLabel("Step 2: Shuffle Deck"); await performShuffleAnimation();
-            await sleep(300); updateStepLabel("Step 3: Reinforce");
+            await sleep(300); updateStepLabel("Step 3: Strategic Reinforcement");
             document.getElementById('main-action-btn').disabled = false;
             document.getElementById('main-action-btn').innerText = "End Prep Phase";
             enemyReinforce(); isProcessing = false;
@@ -537,7 +559,12 @@
             isProcessing = true; updateStepLabel("Purging hand...");
             playerHand.forEach((card, i) => {
                 playerLimbo.push(card);
-                gsap.to(card.position, { x: playerLimboMesh.position.x, y: 0.2 + (playerLimbo.length * 0.05), z: playerLimboMesh.position.z, duration: 0.6, delay: i * 0.05, onComplete: () => { card.rotation.set(0, 0, 0); if (card.children[0]) card.children[0].material.emissiveIntensity = 0.3; } });
+                gsap.to(card.position, { x: playerLimboMesh.position.x, y: 0.2 + (playerLimbo.length * 0.05), z: playerLimboMesh.position.z, duration: 0.6, delay: i * 0.05, onComplete: () => { 
+                    card.rotation.set(0, 0, 0); 
+                    if (card.children[0]) card.children[0].material.emissiveIntensity = 0.3;
+                    // CLEAR COUNTERS ON PURGE
+                    card.userData.powerMarkers = 0; card.userData.weaknessMarkers = 0; updateCardVisualMarkers(card);
+                } });
             });
             playerHand = []; activeSelection = null; setTimeout(() => { startResolution(); }, 800);
         }
@@ -546,21 +573,38 @@
             currentPhase = 'RESOLUTION'; document.getElementById('main-action-btn').disabled = true;
             for (let i = 0; i < SEVEN; i++) { await resolveSeal(i); }
             checkVictory();
-            
-            // CONCLUDE GAME AFTER ROUND 3
             if (currentPhase !== 'GAME_OVER') {
-                if (currentRound >= 3) {
-                    finalizeGame();
-                } else {
-                    currentRound++; 
-                    document.getElementById('round-indicator').innerText = `ROUND ${currentRound}`;
+                if (currentRound >= 3) { finalizeGame(); } else {
+                    currentRound++; document.getElementById('round-indicator').innerText = `ROUND ${currentRound}`;
                     gsap.to(camera.position, { x: 0, y: 28, z: 32, duration: 1.5, ease: "power2.inOut" });
                     gsap.to(cameraTarget, { x: 0, y: 0, z: -2, duration: 1.5, ease: "power2.inOut" });
+                    
                     const allBoardCards = [...playerBattlefield, ...enemyBattlefield, ...seals.map(s => s.champion)].filter(c => c !== null);
-                    allBoardCards.forEach(c => { if (c.userData.ability.includes("round")) c.userData.isInvincible = false; });
-                    isProcessing = false; 
-                    startPrepPhase();
+                    allBoardCards.forEach(c => { 
+                        c.userData.isInvincible = false; 
+                        c.userData.isSuppressed = false;
+                    });
+                    
+                    isProcessing = false; startPrepPhase();
                 }
+            }
+        }
+
+        async function executeGlobalAbility(source) {
+            if (source.userData.effect === 'siphon_all') {
+                const allBoardCards = [...playerBattlefield, ...enemyBattlefield, ...seals.map(s => s.champion)].filter(c => c !== null && c !== source);
+                let totalP = 0, totalW = 0;
+                allBoardCards.forEach(c => {
+                    totalP += c.userData.powerMarkers;
+                    totalW += c.userData.weaknessMarkers;
+                    c.userData.powerMarkers = 0;
+                    c.userData.weaknessMarkers = 0;
+                    updateCardVisualMarkers(c);
+                });
+                source.userData.powerMarkers += totalP;
+                source.userData.weaknessMarkers += totalW;
+                updateCardVisualMarkers(source);
+                await sleep(600);
             }
         }
 
@@ -571,39 +615,42 @@
             document.getElementById('phase-name-label').innerText = `Seal ${idx + 1}`;
             gsap.to(camera.position, { x: seal.mesh.position.x, y: 14, z: 14, duration: 1 });
             gsap.to(cameraTarget, { x: seal.mesh.position.x, y: 0, z: 0, duration: 1 });
-            let pCard = playerBattlefield[idx], eCard = enemyBattlefield[idx];
             
+            let pCard = playerBattlefield[idx], eCard = enemyBattlefield[idx];
             updateStepLabel("Step A: The Flip");
-            // Only trigger flip visuals for face-down cards
-            const pFlipping = pCard && !pCard.userData.faceUp;
-            const eFlipping = eCard && !eCard.userData.faceUp;
-            if (pFlipping) gsap.to(pCard.rotation, { x: 0, duration: 0.5 }); 
-            if (eFlipping) gsap.to(eCard.rotation, { x: 0, duration: 0.5 });
+            const pFlipping = pCard && !pCard.userData.faceUp, eFlipping = eCard && !eCard.userData.faceUp;
+            if (pFlipping) gsap.to(pCard.rotation, { x: 0, duration: 0.5 }); if (eFlipping) gsap.to(eCard.rotation, { x: 0, duration: 0.5 });
             if (pFlipping || eFlipping) await sleep(800);
 
-            updateStepLabel("Step B: Abilities");
-            // ONLY trigger abilities if the card is actually flipping this turn
-            if (pFlipping) {
-                if (pCard.userData.ability.toLowerCase().includes("invulnerability")) pCard.userData.isInvincible = true;
-                if (pCard.userData.needsAllocation) await allocateCounters(pCard, false);
-                if (pCard.userData.hasTargetedAbility) await handleTargetedAbility(pCard, false);
+            updateStepLabel("Step B: Flip Abilities");
+            let pPowVal = pCard ? pCard.userData.power + pCard.userData.powerMarkers - pCard.userData.weaknessMarkers : -1;
+            let ePowVal = eCard ? eCard.userData.power + eCard.userData.powerMarkers - eCard.userData.weaknessMarkers : -1;
+            let executionOrder = pPowVal >= ePowVal ? ['player', 'enemy'] : ['enemy', 'player'];
+
+            for (let side of executionOrder) {
+                let current = side === 'player' ? pCard : eCard;
+                let opponent = side === 'player' ? eCard : pCard;
+                let isFlipping = side === 'player' ? pFlipping : eFlipping;
+                if (!current || !isFlipping || current.userData.isSuppressed) continue;
+                if (current.userData.hasNullify) { if (opponent) opponent.userData.isSuppressed = true; }
+                if (current.userData.ability.toLowerCase().includes("invulnerability")) current.userData.isInvincible = true;
+                if (current.userData.needsAllocation) await allocateCounters(current, side === 'enemy');
+                if (current.userData.hasTargetedAbility) await handleTargetedAbility(current, side === 'enemy');
+                if (current.userData.hasGlobalAbility) await executeGlobalAbility(current);
+                pCard = playerBattlefield[idx]; eCard = enemyBattlefield[idx];
             }
-            if (eFlipping) {
-                if (eCard.userData.ability.toLowerCase().includes("invulnerability")) eCard.userData.isInvincible = true;
-                if (eCard.userData.needsAllocation) await allocateCounters(eCard, true);
-                if (eCard.userData.hasTargetedAbility) await handleTargetedAbility(eCard, true);
-            }
-            if (pCard) pCard.userData.faceUp = true; 
-            if (eCard) eCard.userData.faceUp = true;
+            if (pCard) pCard.userData.faceUp = true; if (eCard) eCard.userData.faceUp = true;
 
             updateStepLabel("Step C: Battle");
-            // standard battle/siege logic remains same...
             if (pCard && seal.champion && seal.champion.userData.isEnemy) {
                 const pPow = pCard.userData.power + pCard.userData.powerMarkers - pCard.userData.weaknessMarkers;
                 const cPow = seal.champion.userData.power + seal.champion.userData.powerMarkers - seal.champion.userData.weaknessMarkers;
                 if (pPow > cPow) { if (!seal.champion.userData.isInvincible) { destroyToLimbo(seal.champion, true, idx, true); seal.champion = null; } }
                 else if (pPow < cPow) { if (!pCard.userData.isInvincible) { destroyToLimbo(pCard, false, idx); pCard = null; } }
-                else { if (!seal.champion.userData.isInvincible) { destroyToLimbo(seal.champion, true, idx, true); seal.champion = null; } if (!pCard.userData.isInvincible) { destroyToLimbo(pCard, false, idx); pCard = null; } }
+                else { 
+                    if (!seal.champion.userData.isInvincible) { destroyToLimbo(seal.champion, true, idx, true); seal.champion = null; } 
+                    if (!pCard.userData.isInvincible) { destroyToLimbo(pCard, false, idx); pCard = null; } 
+                }
                 await sleep(500);
             }
             if (eCard && seal.champion && !seal.champion.userData.isEnemy) {
@@ -611,22 +658,29 @@
                 const cPow = seal.champion.userData.power + seal.champion.userData.powerMarkers - seal.champion.userData.weaknessMarkers;
                 if (ePow > cPow) { if (!seal.champion.userData.isInvincible) { destroyToLimbo(seal.champion, false, idx, true); seal.champion = null; } }
                 else if (ePow < cPow) { if (!eCard.userData.isInvincible) { destroyToLimbo(eCard, true, idx); eCard = null; } }
-                else { if (!seal.champion.userData.isInvincible) { destroyToLimbo(seal.champion, false, idx, true); seal.champion = null; } if (!eCard.userData.isInvincible) { destroyToLimbo(eCard, true, idx); eCard = null; } }
+                else { 
+                    if (!seal.champion.userData.isInvincible) { destroyToLimbo(seal.champion, false, idx, true); seal.champion = null; } 
+                    if (!eCard.userData.isInvincible) { destroyToLimbo(eCard, true, idx); eCard = null; } 
+                }
                 await sleep(500);
             }
+
             if (pCard && eCard) {
                 const pPow = pCard.userData.power + pCard.userData.powerMarkers - pCard.userData.weaknessMarkers;
                 const ePow = eCard.userData.power + eCard.userData.powerMarkers - eCard.userData.weaknessMarkers;
                 if (pPow > ePow) { if (!eCard.userData.isInvincible) { destroyToLimbo(eCard, true, idx); eCard = null; } await handlePostBattleSiege(idx, pPow, true); }
                 else if (ePow > pPow) { if (!pCard.userData.isInvincible) { destroyToLimbo(pCard, false, idx); pCard = null; } await handlePostBattleSiege(idx, ePow, false); }
-                else { if (!pCard.userData.isInvincible) { destroyToLimbo(pCard, false, idx); pCard = null; } if (!eCard.userData.isInvincible) { destroyToLimbo(eCard, true, idx); eCard = null; } }
+                else {
+                    if (!pCard.userData.isInvincible) { destroyToLimbo(pCard, false, idx); pCard = null; }
+                    if (!eCard.userData.isInvincible) { destroyToLimbo(eCard, true, idx); eCard = null; }
+                }
             } else if (pCard) { await handlePostBattleSiege(idx, pCard.userData.power + pCard.userData.powerMarkers - pCard.userData.weaknessMarkers, true); }
             else if (eCard) { await handlePostBattleSiege(idx, eCard.userData.power + eCard.userData.powerMarkers - eCard.userData.weaknessMarkers, false); }
             else { await handlePostBattleSiege(idx, 0, true); }
             await sleep(600);
             updateStepLabel("Step E: Ascension");
             const survivor = (playerBattlefield[idx]) ? playerBattlefield[idx] : ((enemyBattlefield[idx]) ? enemyBattlefield[idx] : null);
-            if (survivor && survivor.userData.isChampion && !seal.champion) { ascendToSeal(survivor, idx); }
+            if (survivor && survivor.userData.isChampion && !seal.champion) ascendToSeal(survivor, idx);
             await sleep(1000);
         }
 
@@ -658,6 +712,10 @@
         function applyAbilityEffect(target) {
             if (!pendingAbilityData) return;
             const { effect } = pendingAbilityData; if (target.userData.isInvincible) return;
+            
+            // CLEAN COUNTERS BEFORE REMOVAL
+            target.userData.powerMarkers = 0; target.userData.weaknessMarkers = 0; updateCardVisualMarkers(target);
+
             if (effect === 'destroy') {
                 const targetIdx = enemyBattlefield.indexOf(target), pTargetIdx = playerBattlefield.indexOf(target), sealTarget = seals.find(s => s.champion === target);
                 if (sealTarget) { destroyToLimbo(target, target.userData.isEnemy, sealTarget.index, true); sealTarget.champion = null; }
@@ -666,7 +724,9 @@
             } else if (effect === 'return') {
                 const targetIdx = enemyBattlefield.indexOf(target), pTargetIdx = playerBattlefield.indexOf(target), sealTarget = seals.find(s => s.champion === target);
                 if (sealTarget) sealTarget.champion = null; else if (targetIdx !== -1) enemyBattlefield[targetIdx] = null; else if (pTargetIdx !== -1) playerBattlefield[pTargetIdx] = null;
-                const ownerDeck = target.userData.isEnemy ? enemyDeck : playerDeck; ownerDeck.push({ ...target.userData });
+                const ownerDeck = target.userData.isEnemy ? enemyDeck : playerDeck; 
+                const cleanedData = { ...target.userData, powerMarkers: 0, weaknessMarkers: 0, faceUp: false, isInvincible: false, isSuppressed: false };
+                ownerDeck.push(cleanedData);
                 gsap.to(target.position, { y: 10, duration: 0.5, onComplete: () => scene.remove(target) }); updateUICounters();
             }
         }
@@ -693,6 +753,10 @@
         function destroyToLimbo(card, isEnemy, idx, isChamp = false) {
             const limboPile = isEnemy ? enemyLimbo : playerLimbo; const limboMesh = isEnemy ? enemyLimboMesh : playerLimboMesh;
             limboPile.push(card); if (!isChamp) { if (isEnemy) enemyBattlefield[idx] = null; else playerBattlefield[idx] = null; }
+            
+            // CLEAR COUNTERS ON DESTRUCTION
+            card.userData.powerMarkers = 0; card.userData.weaknessMarkers = 0; updateCardVisualMarkers(card);
+
             gsap.to(card.position, { x: limboMesh.position.x + (Math.random()-0.5), y: 0.2 + (limboPile.length * 0.05), z: limboMesh.position.z + (Math.random()-0.5), duration: 0.8, ease: "power2.inOut" });
             gsap.to(card.rotation, { x: 0, y: Math.random() * 0.5, z: 0, duration: 0.8 }); if (card.children[0]) card.children[0].material.emissiveIntensity = 0.3;
         }
@@ -716,8 +780,7 @@
         function adjustTuning(key, delta) { tuning[key] = parseFloat((tuning[key] + delta).toFixed(2)); document.getElementById(`val-${key}`).innerText = tuning[key]; rearrangeHand(); }
 
         function restartGame() {
-            document.getElementById('msg-overlay').style.display = 'none';
-            document.getElementById('selection-overlay').style.display = 'flex';
+            document.getElementById('msg-overlay').style.display = 'none'; document.getElementById('selection-overlay').style.display = 'flex';
             [...playerHand, ...playerLimbo, ...enemyLimbo, ...playerBattlefield, ...enemyBattlefield].forEach(card => { if (card) scene.remove(card); });
             seals.forEach(seal => { if (seal.champion) scene.remove(seal.champion); seal.champion = null; seal.alignment = 'NEUTRAL'; seal.mesh.material.emissive.setHex(0x080808); seal.light.intensity = 0; });
             document.querySelectorAll('.seal-node').forEach(node => node.className = 'seal-node');
@@ -725,8 +788,7 @@
             playerHand = []; playerLimbo = []; enemyLimbo = []; currentRound = 1;
             document.getElementById('round-indicator').innerText = `ROUND 1`;
             document.getElementById('p1-score').innerText = `0 / 7`; document.getElementById('p2-score').innerText = `0 / 7`;
-            gsap.to(camera.position, { x: 0, y: 28, z: 32, duration: 1.5 }); cameraTarget.set(0, 0, -2);
-            isProcessing = false;
+            gsap.to(camera.position, { x: 0, y: 28, z: 32, duration: 1.5 }); cameraTarget.set(0, 0, -2); isProcessing = false;
         }
 
         function onMouseMove(event) {
@@ -816,7 +878,7 @@
             const eAlign = playerAlignment === 'LIGHT' ? 'CORRUPTED' : 'PURIFIED';
             const pCount = seals.filter(s => s.alignment === pAlign).length;
             const eCount = seals.filter(s => s.alignment === eAlign).length;
-            if (pCount === 7) showGameOver("THE GREAT ASCENSION", "You have achieved total alignment. The Light prevails.");
+            if (pCount === 7) showGameOver("THE GREAT ASCENSION", "You have achieved total alignment. Your path prevails.");
             else if (eCount === 7) showGameOver("THE FINAL ECLIPSE", "The cycle is broken. The Void consumes all.");
         }
 
@@ -826,16 +888,10 @@
             const pCount = seals.filter(s => s.alignment === pAlign).length;
             const eCount = seals.filter(s => s.alignment === eAlign).length;
             const neutralCount = seals.filter(s => s.alignment === 'NEUTRAL').length;
-
-            if (neutralCount > 0) {
-                showGameOver("THE STAGNANT ERA", "The cycle ends in a stalemate. Unclaimed seals prevent total convergence.");
-            } else if (pCount > eCount) {
-                showGameOver("VICTORY", "You have secured the majority. Your alignment shapes the next world.");
-            } else if (eCount > pCount) {
-                showGameOver("DEFEAT", "The opponent has secured the majority. The world yields to their rhythm.");
-            } else {
-                showGameOver("A DRAW", "The forces are perfectly balanced. Neither side prevails.");
-            }
+            if (neutralCount > 0) { showGameOver("THE STAGNANT ERA", "The cycle ends in a stalemate. Unclaimed seals prevent total convergence."); } 
+            else if (pCount > eCount) { showGameOver("VICTORY", "You have secured the majority. Your alignment shapes the next world."); } 
+            else if (eCount > pCount) { showGameOver("DEFEAT", "The opponent has secured the majority. The world yields to their rhythm."); } 
+            else { showGameOver("A DRAW", "The forces are perfectly balanced. Neither side prevails."); }
         }
 
         function showGameOver(title, body) { currentPhase = 'GAME_OVER'; document.getElementById('msg-overlay').style.display = 'flex'; document.getElementById('msg-title').innerText = title; document.getElementById('msg-body').innerText = body; }

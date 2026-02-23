@@ -10,80 +10,105 @@
         body { margin: 0; padding: 0; overflow: hidden; background: #0a0a0f; font-family: 'Cinzel', serif; color: #e0e0e0; }
         #ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; display: flex; flex-direction: column; justify-content: space-between; }
         
-        .hud-top { background: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent); padding: 20px; display: flex; justify-content: space-between; pointer-events: auto; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .hud-bottom { background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); padding: 30px; display: flex; flex-direction: column; align-items: center; pointer-events: auto; }
+        .hud-top { 
+            background: linear-gradient(to bottom, rgba(0,0,0,0.95), rgba(0,0,0,0.7), transparent); 
+            padding: 15px 20px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: flex-start;
+            pointer-events: auto; 
+            border-bottom: 1px solid rgba(255,255,255,0.1); 
+        }
+
+        .header-center-hub {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+            background: rgba(255,255,255,0.05);
+            padding: 10px 25px;
+            border-radius: 0 0 15px 15px;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-top: none;
+            backdrop-filter: blur(10px);
+        }
+
+        .status-group { text-align: center; min-width: 120px; }
+        .phase-group { text-align: center; border-left: 1px solid rgba(255,255,255,0.2); padding-left: 30px; min-width: 200px; }
         
-        .alignment-panel { background: rgba(10, 10, 15, 0.8); padding: 10px 20px; border-radius: 5px; border: 1px solid #333; min-width: 150px; }
+        .hud-bottom { background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); padding: 20px; display: flex; flex-direction: column; align-items: center; pointer-events: auto; }
+        
+        .alignment-panel { background: rgba(10, 10, 15, 0.8); padding: 10px 20px; border-radius: 5px; border: 1px solid #333; min-width: 150px; transition: 0.5s; }
         .light-glow { box-shadow: 0 0 15px rgba(0, 242, 255, 0.4); border-color: #00f2ff; }
         .dark-glow { box-shadow: 0 0 15px rgba(255, 0, 68, 0.4); border-color: #ff0044; }
 
-        .phase-banner { text-align: center; margin-bottom: 15px; }
-        .phase-title { font-size: 1.8rem; letter-spacing: 6px; text-transform: uppercase; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.8); }
-        .phase-step { font-size: 0.9rem; color: #00f2ff; font-weight: bold; letter-spacing: 2px; height: 20px; transition: opacity 0.3s; text-shadow: 0 0 5px #00f2ff; }
+        .phase-title { font-size: 1.1rem; letter-spacing: 3px; text-transform: uppercase; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.8); margin-bottom: 2px; }
+        .phase-step { font-size: 0.65rem; color: #00f2ff; font-weight: bold; letter-spacing: 1px; transition: opacity 0.3s; text-shadow: 0 0 5px #00f2ff; text-transform: uppercase; }
 
         .btn { background: #1a1a1a; color: white; border: 1px solid #555; padding: 12px 40px; cursor: pointer; font-family: inherit; transition: 0.3s; pointer-events: auto; letter-spacing: 2px; text-transform: uppercase; font-weight: bold; }
         .btn:hover:not(:disabled) { background: #333; border-color: #00f2ff; box-shadow: 0 0 20px rgba(0,242,255,0.6); color: #00f2ff; }
         .btn:disabled { opacity: 0.3; cursor: default; }
 
-        .widget-panel { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 15px; pointer-events: auto; background: rgba(0,0,0,0.8); padding: 15px; border-radius: 10px; border: 1px solid #444; }
+        .action-btn-small { padding: 8px 20px; font-size: 0.75rem; margin-top: 5px; width: 100%; }
+
+        /* Selection & End Overlays */
+        #selection-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #050508; z-index: 1000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            pointer-events: auto;
+        }
+        .selection-container { display: flex; gap: 40px; margin-top: 40px; }
+        .side-choice {
+            width: 250px; height: 350px;
+            border: 2px solid #333; border-radius: 15px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            cursor: pointer; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            background: rgba(255,255,255,0.02); padding: 20px; text-align: center;
+        }
+        .side-choice:hover { transform: scale(1.05); }
+        .side-choice.light:hover { border-color: #00f2ff; box-shadow: 0 0 30px rgba(0,242,255,0.3); }
+        .side-choice.dark:hover { border-color: #ff0044; box-shadow: 0 0 30px rgba(255,0,68,0.3); }
+        .side-choice h2 { margin: 15px 0; letter-spacing: 4px; }
+        .side-choice p { font-size: 0.7rem; color: #888; font-style: italic; line-height: 1.5; }
+
+        /* Tuning Widget */
+        .widget-panel { 
+            position: absolute; right: 20px; top: 50%; transform: translateY(-50%); 
+            display: flex; flex-direction: column; gap: 15px; pointer-events: auto; 
+            background: rgba(0,0,0,0.9); padding: 15px; border-radius: 10px; border: 1px solid #444;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); width: 140px;
+        }
+        .widget-panel.collapsed { transform: translateY(-50%) translateX(170px); opacity: 0.5; }
+        .collapse-toggle {
+            position: absolute; left: -40px; top: 0; width: 35px; height: 35px;
+            background: #111; border: 1px solid #444; color: #00f2ff;
+            display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 5px 0 0 5px;
+        }
+
         .control-group { display: flex; flex-direction: column; align-items: center; gap: 5px; border-bottom: 1px solid #333; padding-bottom: 10px; }
         .control-group:last-child { border-bottom: none; }
-        .control-label { font-size: 0.6rem; color: #888; text-transform: uppercase; letter-spacing: 1px; }
-        .control-val { font-size: 0.8rem; color: #00f2ff; font-weight: bold; }
-        .zoom-btn { width: 40px; height: 40px; background: rgba(0,0,0,0.7); border: 1px solid #00f2ff; color: #00f2ff; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; border-radius: 5px; cursor: pointer; transition: 0.3s; }
+        .control-label { font-size: 0.55rem; color: #888; text-transform: uppercase; letter-spacing: 1px; }
+        .control-val { font-size: 0.75rem; color: #00f2ff; font-weight: bold; }
+        .zoom-btn { width: 35px; height: 35px; background: rgba(0,0,0,0.7); border: 1px solid #00f2ff; color: #00f2ff; display: flex; align-items: center; justify-content: center; font-size: 1rem; border-radius: 5px; cursor: pointer; transition: 0.3s; }
         .zoom-btn:hover { background: #00f2ff; color: #000; box-shadow: 0 0 10px #00f2ff; }
 
         #msg-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 100; pointer-events: auto; backdrop-filter: blur(5px); }
         
-        .seal-indicator-strip { position: absolute; top: 120px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; }
+        .seal-indicator-strip { position: absolute; top: 140px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; }
         .seal-node { width: 12px; height: 12px; border-radius: 50%; border: 1px solid #444; background: #111; transition: 0.5s; }
         .node-purified { background: #00f2ff; box-shadow: 0 0 10px #00f2ff; border-color: #fff; }
         .node-corrupted { background: #ff0044; box-shadow: 0 0 10px #ff0044; border-color: #fff; }
         .node-active { transform: scale(1.5); border-color: #fff; }
 
         .tooltip { 
-            position: absolute; 
-            padding: 15px; 
-            background: rgba(10,10,20,0.95); 
-            border: 1px solid #00f2ff; 
-            border-radius: 4px; 
-            pointer-events: none; 
-            opacity: 0; 
-            transition: 0.2s; 
-            font-size: 0.9rem; 
-            z-index: 20; 
-            color: #fff; 
-            box-shadow: 0 0 15px rgba(0,242,255,0.4);
-            min-width: 280px;
-            max-width: 380px;
+            position: absolute; padding: 15px; background: rgba(10,10,20,0.95); border: 1px solid #00f2ff; border-radius: 4px; pointer-events: none; opacity: 0; transition: 0.2s; font-size: 0.9rem; z-index: 20; color: #fff; box-shadow: 0 0 15px rgba(0,242,255,0.4);
+            min-width: 280px; max-width: 380px;
         }
-        .tooltip-ability { 
-            color: #8ff; 
-            font-style: italic; 
-            border-top: 1px solid rgba(255,255,255,0.1); 
-            margin-top: 10px; 
-            padding-top: 10px; 
-            font-size: 0.8rem;
-            line-height: 1.4;
-        }
+        .tooltip-ability { color: #8ff; font-style: italic; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 10px; padding-top: 10px; font-size: 0.8rem; line-height: 1.4; }
         .deck-counter { font-size: 0.6rem; color: #aaa; margin-top: 5px; letter-spacing: 1px; }
 
-        /* Counter Selection UI */
         #counter-overlay {
-            position: absolute;
-            top: 200px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0,0,0,0.9);
-            border: 2px solid #00f2ff;
-            padding: 20px;
-            text-align: center;
-            display: none;
-            pointer-events: auto;
-            z-index: 50;
-            min-width: 300px;
-            border-radius: 10px;
-            box-shadow: 0 0 30px rgba(0, 242, 255, 0.5);
+            position: absolute; top: 220px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.9); border: 2px solid #00f2ff; padding: 20px; text-align: center; display: none; pointer-events: auto; z-index: 50; min-width: 300px; border-radius: 10px; box-shadow: 0 0 30px rgba(0, 242, 255, 0.5);
         }
         .counter-pool-item { display: inline-block; margin: 10px; padding: 10px; border: 1px solid #444; border-radius: 5px; }
         .power-marker-text { color: #00f2ff; font-weight: bold; font-size: 1.2rem; }
@@ -93,19 +118,45 @@
 </head>
 <body>
 
+    <div id="selection-overlay">
+        <h1 style="letter-spacing: 10px; font-size: 2.5rem; margin-bottom: 10px;">ENDLESS SEVEN</h1>
+        <p style="color: #666; font-style: italic;">"Choose your side. Seal the heartbeat of the world."</p>
+        <div class="selection-container">
+            <div class="side-choice light" onclick="selectAlignment('LIGHT')">
+                <div style="font-size: 3rem; color: #00f2ff;">☼</div>
+                <h2 style="color: #00f2ff;">LIGHT</h2>
+                <p>Command Celestials and Lycans. Purify the Seals to prevent Armageddon and restore peace.</p>
+            </div>
+            <div class="side-choice dark" onclick="selectAlignment('DARK')">
+                <div style="font-size: 3rem; color: #ff0044;">☾</div>
+                <h2 style="color: #ff0044;">DARKNESS</h2>
+                <p>Lead Daemons and Vampyres. Corrupt the heartbeat to usher in a new era of the Void.</p>
+            </div>
+        </div>
+    </div>
+
     <div id="ui">
         <div class="hud-top">
-            <div class="alignment-panel dark-glow">
-                <div style="color: #ff0044; font-size: 0.7rem;">PLAYER 2 (DARKNESS)</div>
+            <div id="enemy-panel" class="alignment-panel dark-glow">
+                <div id="enemy-label" style="color: #ff0044; font-size: 0.7rem;">ENEMY (DARKNESS)</div>
                 <div id="p2-score" style="font-size: 1.8rem">0 / 7</div>
                 <div id="p2-deck-count" class="deck-counter">DECK: 49</div>
             </div>
-            <div style="text-align: center">
-                <div id="round-indicator" style="font-size: 1.2rem; margin-bottom: 5px;">ROUND 1</div>
-                <div id="game-status" style="font-size: 0.7rem; color: #aaa; text-transform: uppercase; letter-spacing: 1px;">Awaiting Command</div>
+
+            <div class="header-center-hub">
+                <div class="status-group">
+                    <div id="round-indicator" style="font-size: 1.1rem; color: #fff;">ROUND 1</div>
+                    <div id="game-status" style="font-size: 0.6rem; color: #888; text-transform: uppercase; letter-spacing: 1px;">Awaiting Command</div>
+                </div>
+                <div class="phase-group">
+                    <div id="phase-name-label" class="phase-title">Prep Phase</div>
+                    <div id="phase-step-label" class="phase-step"></div>
+                    <button id="main-action-btn" class="btn action-btn-small">End Prep Phase</button>
+                </div>
             </div>
-            <div class="alignment-panel light-glow" style="text-align: right">
-                <div style="color: #00f2ff; font-size: 0.7rem;">PLAYER 1 (LIGHT)</div>
+
+            <div id="player-panel" class="alignment-panel light-glow" style="text-align: right">
+                <div id="player-label" style="color: #00f2ff; font-size: 0.7rem;">YOU (LIGHT)</div>
                 <div id="p1-score" style="font-size: 1.8rem">0 / 7</div>
                 <div id="p1-deck-count" class="deck-counter">DECK: 49</div>
             </div>
@@ -123,7 +174,6 @@
                     <div id="weakness-pool-val" class="weakness-marker-text">0</div>
                 </div>
             </div>
-            <div style="font-size: 0.7rem; color: #aaa; margin-top: 10px;">Click cards on the board to apply.</div>
             <button id="finish-counters-btn" class="btn" style="margin-top: 15px; padding: 5px 20px;">Done</button>
         </div>
 
@@ -133,16 +183,17 @@
             <div class="seal-node"></div>
         </div>
 
-        <div class="widget-panel">
+        <div id="widget-panel" class="widget-panel">
+            <div class="collapse-toggle" onclick="toggleWidget()">⚙</div>
             <div class="control-group">
-                <span class="control-label">Camera Zoom</span>
+                <span class="control-label">Zoom</span>
                 <div style="display:flex; gap:5px">
                     <button class="zoom-btn" onclick="zoomCamera(-5)">+</button>
                     <button class="zoom-btn" onclick="zoomCamera(5)">−</button>
                 </div>
             </div>
             <div class="control-group">
-                <span class="control-label">Hand Tilt</span>
+                <span class="control-label">Tilt</span>
                 <span id="val-tilt" class="control-val">0.85</span>
                 <div style="display:flex; gap:5px">
                     <button class="zoom-btn" onclick="adjustTuning('tilt', 0.05)">+</button>
@@ -150,19 +201,11 @@
                 </div>
             </div>
             <div class="control-group">
-                <span class="control-label">Hand Height</span>
+                <span class="control-label">Height</span>
                 <span id="val-height" class="control-val">12.0</span>
                 <div style="display:flex; gap:5px">
                     <button class="zoom-btn" onclick="adjustTuning('height', 0.5)">↑</button>
                     <button class="zoom-btn" onclick="adjustTuning('height', -0.5)">↓</button>
-                </div>
-            </div>
-            <div class="control-group">
-                <span class="control-label">Hand Distance</span>
-                <span id="val-dist" class="control-val">21.0</span>
-                <div style="display:flex; gap:5px">
-                    <button class="zoom-btn" onclick="adjustTuning('dist', -0.5)">Forward</button>
-                    <button class="zoom-btn" onclick="adjustTuning('dist', 0.5)">Back</button>
                 </div>
             </div>
         </div>
@@ -170,12 +213,7 @@
         <div id="card-tooltip" class="tooltip"></div>
 
         <div class="hud-bottom">
-            <div class="phase-banner">
-                <div id="phase-step-label" class="phase-step"></div>
-                <div id="phase-name-label" class="phase-title">Prep Phase</div>
-            </div>
-            <div id="instruction-text" style="color: #ddd; margin-bottom: 20px; font-style: italic; min-height: 1.2rem; text-shadow: 0 1px 2px #000;"></div>
-            <button id="main-action-btn" class="btn">End Prep Phase</button>
+            <div id="instruction-text" style="color: #ddd; font-style: italic; min-height: 1.2rem; text-shadow: 0 1px 2px #000; font-size: 0.85rem;"></div>
         </div>
     </div>
 
@@ -187,7 +225,7 @@
 
     <script>
         /**
-         * ENDLESS SEVEN ENGINE - FULL MANIFEST DATA
+         * ENDLESS SEVEN ENGINE - MANIFEST DATA
          */
         const LIGHT_POOL = [
             { name: "The Spinner", faction: "Light", type: "Avatar", power: 9, isChampion: true, ability: "Flip: Gain +1 Power Marker for every Light card currently in play.", markerPower: 0, needsAllocation: true },
@@ -224,7 +262,7 @@
             { name: "Wrath", faction: "Daemon", type: "Creature", power: 7, isChampion: false, ability: "Flip: Enemy loses 1 Power.", markerWeakness: 1, needsAllocation: true },
             { name: "Pride", faction: "Daemon", type: "Creature", power: 6, isChampion: false, ability: "Flip: Card across loses 3 Power.", markerWeakness: 3, needsAllocation: true },
             { name: "Greed", faction: "Daemon", type: "Creature", power: 5, isChampion: false, ability: "Flip: Battle invulnerability." },
-            { name: "Sloth", faction: "Daemon", type: "Creature", power: 4, isChampion: false, ability: "Flip: Target card loses 3 Power.", markerWeakness: 3, needsAllocation: true },
+            { name: "Sloth", faction: "Daemon", type: "Creature", power: 4, isChampion: false, ability: "Passive: Ability immune. Flip: -3 Weakness. Action: Destroy creature with Weakness." },
             { name: "Envy", faction: "Daemon", type: "Creature", power: 3, isChampion: false, ability: "Flip: Target card loses 3 Power.", markerWeakness: 3, needsAllocation: true },
             { name: "Lust", faction: "Daemon", type: "Creature", power: 2, isChampion: false, ability: "Flip: Forced mutual sacrifice." },
             { name: "Gluttony", faction: "Daemon", type: "Creature", power: 1, isChampion: false, ability: "Flip: Siphon all Power Markers." },
@@ -242,6 +280,7 @@
         const CARD_W = 2.2;
         const CARD_H = 3.2;
         
+        let playerAlignment = 'LIGHT'; 
         let tuning = { tilt: 0.85, height: 12.0, dist: 21.0 };
         let scene, camera, renderer, raycaster, mouse;
         let cameraTarget = new THREE.Vector3(0, 0, -2); 
@@ -252,22 +291,14 @@
         let playerHand = [];
         let playerLimbo = [];
         let enemyLimbo = [];
-
-        // Logical Decks
-        let playerDeck = [];
-        let enemyDeck = [];
+        let playerDeck = [], enemyDeck = [];
         
         let currentRound = 1;
         let currentPhase = 'PREP'; 
         let selectedObject = null;
         let activeSelection = null;
         let isProcessing = false;
-
-        // Counter & Ability State
-        let pendingPowerPool = 0;
-        let pendingWeaknessPool = 0;
-        let pendingAbilityData = null; // { source, effect, targetType }
-        let resolutionCallback = null;
+        let pendingPowerPool = 0, pendingWeaknessPool = 0, pendingAbilityData = null, resolutionCallback = null;
 
         let playerDeckMesh, enemyDeckMesh, playerLimboMesh, enemyLimboMesh, floorMesh;
 
@@ -291,11 +322,6 @@
             setupLighting();
             createTabletop();
             
-            playerDeck = buildDeck(LIGHT_POOL, "Avatar", "God");
-            enemyDeck = buildDeck(DARK_POOL, "Avatar", "God");
-
-            startPrepPhase();
-
             window.addEventListener('mousemove', onMouseMove);
             window.addEventListener('mousedown', onMouseDown);
             window.addEventListener('resize', onWindowResize);
@@ -304,6 +330,39 @@
             document.getElementById('finish-counters-btn').addEventListener('click', finishCounters);
 
             animate();
+        }
+
+        function selectAlignment(side) {
+            playerAlignment = side;
+            document.getElementById('selection-overlay').style.display = 'none';
+            
+            const pLabel = document.getElementById('player-label');
+            const pPanel = document.getElementById('player-panel');
+            const eLabel = document.getElementById('enemy-label');
+            const ePanel = document.getElementById('enemy-panel');
+
+            if (side === 'LIGHT') {
+                pLabel.innerText = "YOU (LIGHT)"; pLabel.style.color = "#00f2ff";
+                pPanel.className = "alignment-panel light-glow";
+                eLabel.innerText = "ENEMY (DARKNESS)"; eLabel.style.color = "#ff0044";
+                ePanel.className = "alignment-panel dark-glow";
+                playerDeck = buildDeck(LIGHT_POOL, "Avatar", "God");
+                enemyDeck = buildDeck(DARK_POOL, "Avatar", "God");
+            } else {
+                pLabel.innerText = "YOU (DARKNESS)"; pLabel.style.color = "#ff0044";
+                pPanel.className = "alignment-panel dark-glow";
+                eLabel.innerText = "ENEMY (LIGHT)"; eLabel.style.color = "#00f2ff";
+                ePanel.className = "alignment-panel light-glow";
+                playerDeck = buildDeck(DARK_POOL, "Avatar", "God");
+                enemyDeck = buildDeck(LIGHT_POOL, "Avatar", "God");
+            }
+
+            updateUICounters();
+            startPrepPhase();
+        }
+
+        function toggleWidget() {
+            document.getElementById('widget-panel').classList.toggle('collapsed');
         }
 
         function buildDeck(pool, singleTypeA, singleTypeB) {
@@ -328,72 +387,33 @@
             const rim = new THREE.DirectionalLight(0xffffff, 0.8);
             rim.position.set(-15, 30, -15);
             scene.add(rim);
-            const playerLight = new THREE.PointLight(0xffffff, 1.0, 60);
-            playerLight.position.set(0, 20, 25);
-            scene.add(playerLight);
+            const pLight = new THREE.PointLight(0xffffff, 1.0, 60);
+            pLight.position.set(0, 20, 25);
+            scene.add(pLight);
         }
 
         function createTabletop() {
-            floorMesh = new THREE.Mesh(
-                new THREE.PlaneGeometry(400, 400),
-                new THREE.MeshPhongMaterial({ color: 0x08080c, shininess: 20 })
-            );
-            floorMesh.rotation.x = -Math.PI/2;
-            floorMesh.receiveShadow = true;
-            scene.add(floorMesh);
-
+            floorMesh = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), new THREE.MeshPhongMaterial({ color: 0x08080c, shininess: 20 }));
+            floorMesh.rotation.x = -Math.PI/2; floorMesh.receiveShadow = true; scene.add(floorMesh);
             const startX = -(SEVEN - 1) * SLOT_SPACING / 2;
             for (let i = 0; i < SEVEN; i++) {
                 const x = startX + i * SLOT_SPACING;
-                const hub = new THREE.Mesh(
-                    new THREE.CylinderGeometry(1.2, 1.25, 0.25, 6),
-                    new THREE.MeshPhongMaterial({ color: 0x222222, emissive: 0x080808 })
-                );
-                hub.position.set(x, 0.1, 0);
-                scene.add(hub);
-
-                const light = new THREE.PointLight(0xffffff, 0, 12);
-                light.position.set(x, 2, 0);
-                scene.add(light);
-
+                const hub = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.25, 0.25, 6), new THREE.MeshPhongMaterial({ color: 0x222222, emissive: 0x080808 }));
+                hub.position.set(x, 0.1, 0); scene.add(hub);
+                const light = new THREE.PointLight(0xffffff, 0, 12); light.position.set(x, 2, 0); scene.add(light);
                 seals.push({ mesh: hub, light, alignment: 'NEUTRAL', champion: null, index: i });
-                createGridSlot(x, 3.2, 0x333333); 
-                createGridSlot(x, -3.2, 0x333333);
+                createGridSlot(x, 3.2, 0x333333); createGridSlot(x, -3.2, 0x333333);
             }
-
-            const startOriginX = -(SEVEN - 1) * SLOT_SPACING / 2;
-            const deckOffset = startOriginX - 4;
-            const limboOffset = (startOriginX + (SEVEN - 1) * SLOT_SPACING) + 4;
-
-            playerDeckMesh = createPile(0x0077aa);
-            playerDeckMesh.position.set(deckOffset, 0.2, 6);
-            scene.add(playerDeckMesh);
-            addLabel(playerDeckMesh, "DECK", 0x00f2ff);
-
-            enemyDeckMesh = createPile(0xaa2233);
-            enemyDeckMesh.position.set(deckOffset, 0.2, -6);
-            scene.add(enemyDeckMesh);
-            addLabel(enemyDeckMesh, "DECK", 0xff0044);
-
-            playerLimboMesh = createPile(0x444444);
-            playerLimboMesh.position.set(limboOffset, 0.05, 6);
-            scene.add(playerLimboMesh);
-            addLabel(playerLimboMesh, "LIMBO", 0xcccccc);
-
-            enemyLimboMesh = createPile(0x444444);
-            enemyLimboMesh.position.set(limboOffset, 0.05, -6);
-            scene.add(enemyLimboMesh);
-            addLabel(enemyLimboMesh, "LIMBO", 0xcccccc);
+            const deckOffset = startX - 4; const limboOffset = (startX + (SEVEN - 1) * SLOT_SPACING) + 4;
+            playerDeckMesh = createPile(0x0077aa); playerDeckMesh.position.set(deckOffset, 0.2, 6); scene.add(playerDeckMesh); addLabel(playerDeckMesh, "DECK", 0x00f2ff);
+            enemyDeckMesh = createPile(0xaa2233); enemyDeckMesh.position.set(deckOffset, 0.2, -6); scene.add(enemyDeckMesh); addLabel(enemyDeckMesh, "DECK", 0xff0044);
+            playerLimboMesh = createPile(0x444444); playerLimboMesh.position.set(limboOffset, 0.05, 6); scene.add(playerLimboMesh); addLabel(playerLimboMesh, "LIMBO", 0xcccccc);
+            enemyLimboMesh = createPile(0x444444); enemyLimboMesh.position.set(limboOffset, 0.05, -6); scene.add(enemyLimboMesh); addLabel(enemyLimboMesh, "LIMBO", 0xcccccc);
         }
 
         function createGridSlot(x, z, color) {
-            const mesh = new THREE.Mesh(
-                new THREE.PlaneGeometry(CARD_W + 0.2, CARD_H + 0.2),
-                new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.4, side: THREE.DoubleSide })
-            );
-            mesh.rotation.x = -Math.PI/2;
-            mesh.position.set(x, 0.06, z);
-            scene.add(mesh);
+            const mesh = new THREE.Mesh(new THREE.PlaneGeometry(CARD_W + 0.2, CARD_H + 0.2), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.4, side: THREE.DoubleSide }));
+            mesh.rotation.x = -Math.PI/2; mesh.position.set(x, 0.06, z); scene.add(mesh);
         }
 
         function createPile(color) {
@@ -402,77 +422,50 @@
             group.add(base);
             for(let i=0; i<6; i++) {
                 const layer = new THREE.Mesh(new THREE.BoxGeometry(CARD_W, 0.05, CARD_H), new THREE.MeshPhongMaterial({ color }));
-                layer.position.y = 0.05 + (i * 0.06);
-                layer.rotation.y = (Math.random() - 0.5) * 0.15;
-                group.add(layer);
+                layer.position.y = 0.05 + (i * 0.06); layer.rotation.y = (Math.random() - 0.5) * 0.15; group.add(layer);
             }
             return group;
         }
 
         function addLabel(parent, text, color) {
-            const canvas = document.createElement('canvas');
-            canvas.width = 256; canvas.height = 128;
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = 'white';
-            ctx.font = 'bold 44px Cinzel';
-            ctx.textAlign = 'center';
-            ctx.fillText(text, 128, 48);
-            ctx.font = 'bold 36px Arial';
-            ctx.fillText("--", 128, 90);
+            const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 128;
+            const ctx = canvas.getContext('2d'); ctx.fillStyle = 'white'; ctx.font = 'bold 44px Cinzel'; ctx.textAlign = 'center'; ctx.fillText(text, 128, 48); ctx.font = 'bold 36px Arial'; ctx.fillText("--", 128, 90);
             const tex = new THREE.CanvasTexture(canvas);
             const label = new THREE.Mesh(new THREE.PlaneGeometry(3.5, 1.75), new THREE.MeshBasicMaterial({ map: tex, transparent: true, color }));
-            label.rotation.x = -Math.PI/2; label.position.y = 0.8;
-            parent.add(label);
+            label.rotation.x = -Math.PI/2; label.position.y = 0.8; parent.add(label);
             parent.userData = { labelCanvas: canvas, labelTexture: tex, labelText: text };
         }
 
         function updateDeckLabel(mesh, count) {
             if (!mesh.userData.labelCanvas) return;
-            const ctx = mesh.userData.labelCanvas.getContext('2d');
-            ctx.clearRect(0,0,256,128);
-            ctx.fillStyle = 'white';
-            ctx.font = 'bold 44px Cinzel';
-            ctx.textAlign = 'center';
-            ctx.fillText(mesh.userData.labelText, 128, 48);
-            ctx.font = 'bold 40px Arial';
-            ctx.fillText(count, 128, 95);
-            mesh.userData.labelTexture.needsUpdate = true;
+            const ctx = mesh.userData.labelCanvas.getContext('2d'); ctx.clearRect(0,0,256,128);
+            ctx.fillStyle = 'white'; ctx.font = 'bold 44px Cinzel'; ctx.textAlign = 'center'; ctx.fillText(mesh.userData.labelText, 128, 48);
+            ctx.font = 'bold 40px Arial'; ctx.fillText(count, 128, 95); mesh.userData.labelTexture.needsUpdate = true;
         }
 
         function createCardMesh(data, isEnemy = false) {
             const group = new THREE.Group();
-            const color = isEnemy ? 0x551111 : 0x113366;
-            const body = new THREE.Mesh(
-                new THREE.BoxGeometry(CARD_W, 0.1, CARD_H),
-                new THREE.MeshPhongMaterial({ color, emissive: color, emissiveIntensity: isEnemy ? 0.3 : 0.8 })
-            );
+            const color = isEnemy ? (playerAlignment === 'LIGHT' ? 0x551111 : 0x113366) : (playerAlignment === 'LIGHT' ? 0x113366 : 0x551111);
+            const body = new THREE.Mesh(new THREE.BoxGeometry(CARD_W, 0.1, CARD_H), new THREE.MeshPhongMaterial({ color, emissive: color, emissiveIntensity: isEnemy ? 0.3 : 0.8 }));
             group.add(body);
-
-            const canvas = document.createElement('canvas');
-            canvas.width = 256; canvas.height = 384;
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = isEnemy ? '#200' : '#002'; ctx.fillRect(0,0,256,384);
+            const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 384;
+            const ctx = canvas.getContext('2d'); ctx.fillStyle = isEnemy ? '#200' : '#002'; ctx.fillRect(0,0,256,384);
             ctx.strokeStyle = isEnemy ? '#f66' : '#6ff'; ctx.lineWidth = 16; ctx.strokeRect(0,0,256,384);
             ctx.fillStyle = 'white'; ctx.font = 'bold 22px Cinzel'; ctx.textAlign = 'center'; ctx.fillText(data.name.toUpperCase(), 128, 50);
             ctx.font = '14px Cinzel'; ctx.fillStyle = isEnemy ? '#f88' : '#8ff'; ctx.fillText(data.faction, 128, 75);
             ctx.fillStyle = 'white'; ctx.font = 'bold 100px Cinzel'; ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 15; ctx.fillText(data.power, 128, 220);
             ctx.font = 'bold 30px Cinzel'; ctx.fillText(data.isChampion ? 'CHAMPION' : data.type.toUpperCase(), 128, 310);
-
             const tex = new THREE.CanvasTexture(canvas);
             const label = new THREE.Mesh(new THREE.PlaneGeometry(CARD_W * 0.95, CARD_H * 0.95), new THREE.MeshBasicMaterial({ map: tex, transparent: true }));
-            label.rotation.x = -Math.PI/2; label.position.y = 0.08;
-            group.add(label);
-
+            label.rotation.x = -Math.PI/2; label.position.y = 0.08; group.add(label);
             const pMark = new THREE.Group(); pMark.position.set(-0.8, 0.1, 1.2); group.add(pMark);
             const wMark = new THREE.Group(); wMark.position.set(0.8, 0.1, 1.2); group.add(wMark);
-
             group.userData = { ...data, isEnemy, faceUp: false, powerMarkers: 0, weaknessMarkers: 0, pMesh: pMark, wMesh: wMark, isInvincible: false };
             return group;
         }
 
         function updateCardVisualMarkers(card) {
-            const ud = card.userData;
-            while(ud.pMesh.children.length > 0) ud.pMesh.remove(ud.pMesh.children[0]);
+            const ud = card.userData; while(ud.pMesh.children.length > 0) ud.pMesh.remove(ud.pMesh.children[0]);
             while(ud.wMesh.children.length > 0) ud.wMesh.remove(ud.wMesh.children[0]);
             for(let i=0; i<ud.powerMarkers; i++) {
                 const dot = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), new THREE.MeshBasicMaterial({ color: 0x00f2ff }));
@@ -485,34 +478,25 @@
         }
 
         async function startPrepPhase() {
-            if (isProcessing) return;
-            isProcessing = true; currentPhase = 'PREP';
+            if (isProcessing) return; isProcessing = true; currentPhase = 'PREP';
             document.getElementById('phase-name-label').innerText = "Prep Phase";
-            document.getElementById('main-action-btn').disabled = true;
-            updateStepLabel("Step 1: Draw Hand");
-            
+            document.getElementById('main-action-btn').disabled = true; updateStepLabel("Step 1: Draw Hand");
             playerHand = []; 
             for (let i = 0; i < 8; i++) {
                 if (playerDeck.length === 0) break;
-                const cardData = playerDeck.pop();
-                const card = createCardMesh(cardData, false);
-                card.position.copy(playerDeckMesh.position);
-                card.position.y += 2;
+                const cardData = playerDeck.pop(); const card = createCardMesh(cardData, false);
+                card.position.copy(playerDeckMesh.position); card.position.y += 2;
                 scene.add(card); playerHand.push(card);
                 const offset = (i - 3.5);
                 gsap.to(card.position, { x: offset * 2.15, y: tuning.height, z: tuning.dist + (Math.abs(offset) * 0.3), duration: 0.6, ease: "power2.out" });
                 gsap.to(card.rotation, { x: tuning.tilt, y: offset * 0.06, z: 0, duration: 0.6 });
                 updateUICounters(); await sleep(100);
             }
-            await sleep(300);
-            updateStepLabel("Step 2: Shuffle Deck");
-            await performShuffleAnimation();
-            await sleep(300);
-            updateStepLabel("Step 3: Strategic Reinforcement");
+            await sleep(300); updateStepLabel("Step 2: Shuffle Deck"); await performShuffleAnimation();
+            await sleep(300); updateStepLabel("Step 3: Reinforce");
             document.getElementById('main-action-btn').disabled = false;
             document.getElementById('main-action-btn').innerText = "End Prep Phase";
-            enemyReinforce();
-            isProcessing = false;
+            enemyReinforce(); isProcessing = false;
         }
 
         async function performShuffleAnimation() {
@@ -524,24 +508,17 @@
         }
 
         function enemyReinforce() {
-            const aiHandData = [];
-            for (let i = 0; i < 8; i++) { if (enemyDeck.length > 0) aiHandData.push(enemyDeck.pop()); }
-            const vacantSlots = [];
-            for (let i = 0; i < SEVEN; i++) { if (!enemyBattlefield[i]) vacantSlots.push(i); }
+            const aiHandData = []; for (let i = 0; i < 8; i++) { if (enemyDeck.length > 0) aiHandData.push(enemyDeck.pop()); }
+            const vacantSlots = []; for (let i = 0; i < SEVEN; i++) { if (!enemyBattlefield[i]) vacantSlots.push(i); }
             vacantSlots.sort((a, b) => {
                 const score = (idx) => {
-                    const seal = seals[idx];
-                    if (seal.alignment === 'PURIFIED') return 3;
-                    if (seal.alignment === 'NEUTRAL') return 2;
-                    return 1;
-                };
-                return score(b) - score(a);
+                    const seal = seals[idx]; const pAlign = playerAlignment === 'LIGHT' ? 'PURIFIED' : 'CORRUPTED';
+                    if (seal.alignment === pAlign) return 3; if (seal.alignment === 'NEUTRAL') return 2; return 1;
+                }; return score(b) - score(a);
             });
             for (let i = 0; i < vacantSlots.length && aiHandData.length > 0; i++) {
-                const slotIdx = vacantSlots[i];
-                aiHandData.sort((a, b) => b.power - a.power);
-                const cardData = aiHandData.shift();
-                const card = createCardMesh(cardData, true);
+                const slotIdx = vacantSlots[i]; aiHandData.sort((a, b) => b.power - a.power);
+                const cardData = aiHandData.shift(); const card = createCardMesh(cardData, true);
                 card.position.copy(enemyDeckMesh.position); card.rotation.x = Math.PI;
                 scene.add(card); enemyBattlefield[slotIdx] = card;
                 gsap.to(card.position, { x: (slotIdx - 3) * SLOT_SPACING, y: 0.1, z: -3.2, duration: 0.8, delay: i * 0.15 });
@@ -552,40 +529,38 @@
         function updateUICounters() {
             document.getElementById('p1-deck-count').innerText = `DECK: ${playerDeck.length}`;
             document.getElementById('p2-deck-count').innerText = `DECK: ${enemyDeck.length}`;
-            updateDeckLabel(playerDeckMesh, playerDeck.length);
-            updateDeckLabel(enemyDeckMesh, enemyDeck.length);
+            updateDeckLabel(playerDeckMesh, playerDeck.length); updateDeckLabel(enemyDeckMesh, enemyDeck.length);
         }
 
         function handleMainAction() { if (currentPhase === 'PREP' && !isProcessing) endPrep(); }
-
         function endPrep() {
-            isProcessing = true; updateStepLabel("Finalizing Placements...");
+            isProcessing = true; updateStepLabel("Purging hand...");
             playerHand.forEach((card, i) => {
                 playerLimbo.push(card);
                 gsap.to(card.position, { x: playerLimboMesh.position.x, y: 0.2 + (playerLimbo.length * 0.05), z: playerLimboMesh.position.z, duration: 0.6, delay: i * 0.05, onComplete: () => { card.rotation.set(0, 0, 0); if (card.children[0]) card.children[0].material.emissiveIntensity = 0.3; } });
             });
-            playerHand = []; activeSelection = null;
-            setTimeout(() => { startResolution(); }, 800);
+            playerHand = []; activeSelection = null; setTimeout(() => { startResolution(); }, 800);
         }
 
         async function startResolution() {
-            currentPhase = 'RESOLUTION';
-            document.getElementById('main-action-btn').disabled = true;
+            currentPhase = 'RESOLUTION'; document.getElementById('main-action-btn').disabled = true;
             for (let i = 0; i < SEVEN; i++) { await resolveSeal(i); }
             checkVictory();
+            
+            // CONCLUDE GAME AFTER ROUND 3
             if (currentPhase !== 'GAME_OVER') {
-                currentRound++; document.getElementById('round-indicator').innerText = `ROUND ${currentRound}`;
-                gsap.to(camera.position, { x: 0, y: 28, z: 32, duration: 1.5, ease: "power2.inOut" });
-                gsap.to(cameraTarget, { x: 0, y: 0, z: -2, duration: 1.5, ease: "power2.inOut" });
-                
-                // End of round cleanup for temporary effects
-                const allBoardCards = [...playerBattlefield, ...enemyBattlefield, ...seals.map(s => s.champion)].filter(c => c !== null);
-                allBoardCards.forEach(c => {
-                    if (c.userData.ability.includes("round")) c.userData.isInvincible = false;
-                });
-
-                if (currentRound > 3) finalizeGame();
-                else { isProcessing = false; startPrepPhase(); }
+                if (currentRound >= 3) {
+                    finalizeGame();
+                } else {
+                    currentRound++; 
+                    document.getElementById('round-indicator').innerText = `ROUND ${currentRound}`;
+                    gsap.to(camera.position, { x: 0, y: 28, z: 32, duration: 1.5, ease: "power2.inOut" });
+                    gsap.to(cameraTarget, { x: 0, y: 0, z: -2, duration: 1.5, ease: "power2.inOut" });
+                    const allBoardCards = [...playerBattlefield, ...enemyBattlefield, ...seals.map(s => s.champion)].filter(c => c !== null);
+                    allBoardCards.forEach(c => { if (c.userData.ability.includes("round")) c.userData.isInvincible = false; });
+                    isProcessing = false; 
+                    startPrepPhase();
+                }
             }
         }
 
@@ -596,21 +571,18 @@
             document.getElementById('phase-name-label').innerText = `Seal ${idx + 1}`;
             gsap.to(camera.position, { x: seal.mesh.position.x, y: 14, z: 14, duration: 1 });
             gsap.to(cameraTarget, { x: seal.mesh.position.x, y: 0, z: 0, duration: 1 });
+            let pCard = playerBattlefield[idx], eCard = enemyBattlefield[idx];
             
-            let pCard = playerBattlefield[idx];
-            let eCard = enemyBattlefield[idx];
-            
-            // Step A: The Flip
             updateStepLabel("Step A: The Flip");
+            // Only trigger flip visuals for face-down cards
             const pFlipping = pCard && !pCard.userData.faceUp;
             const eFlipping = eCard && !eCard.userData.faceUp;
-
-            if (pFlipping) gsap.to(pCard.rotation, { x: 0, duration: 0.5 });
+            if (pFlipping) gsap.to(pCard.rotation, { x: 0, duration: 0.5 }); 
             if (eFlipping) gsap.to(eCard.rotation, { x: 0, duration: 0.5 });
             if (pFlipping || eFlipping) await sleep(800);
 
-            // Step B: Counter & Ability Management (TRIGGER ON FLIP ONLY)
-            updateStepLabel("Step B: Flip Abilities");
+            updateStepLabel("Step B: Abilities");
+            // ONLY trigger abilities if the card is actually flipping this turn
             if (pFlipping) {
                 if (pCard.userData.ability.toLowerCase().includes("invulnerability")) pCard.userData.isInvincible = true;
                 if (pCard.userData.needsAllocation) await allocateCounters(pCard, false);
@@ -621,68 +593,37 @@
                 if (eCard.userData.needsAllocation) await allocateCounters(eCard, true);
                 if (eCard.userData.hasTargetedAbility) await handleTargetedAbility(eCard, true);
             }
-            
-            if (pCard) pCard.userData.faceUp = true;
+            if (pCard) pCard.userData.faceUp = true; 
             if (eCard) eCard.userData.faceUp = true;
 
             updateStepLabel("Step C: Battle");
-            // Standard battle logic with INVINCIBILITY check
+            // standard battle/siege logic remains same...
             if (pCard && seal.champion && seal.champion.userData.isEnemy) {
                 const pPow = pCard.userData.power + pCard.userData.powerMarkers - pCard.userData.weaknessMarkers;
                 const cPow = seal.champion.userData.power + seal.champion.userData.powerMarkers - seal.champion.userData.weaknessMarkers;
-                if (pPow > cPow) {
-                    if (!seal.champion.userData.isInvincible) {
-                        destroyToLimbo(seal.champion, true, idx, true);
-                        seal.champion = null;
-                    }
-                } else if (pPow < cPow) {
-                    if (!pCard.userData.isInvincible) {
-                        destroyToLimbo(pCard, false, idx);
-                        pCard = null;
-                    }
-                } else {
-                    if (!seal.champion.userData.isInvincible) { destroyToLimbo(seal.champion, true, idx, true); seal.champion = null; }
-                    if (!pCard.userData.isInvincible) { destroyToLimbo(pCard, false, idx); pCard = null; }
-                }
+                if (pPow > cPow) { if (!seal.champion.userData.isInvincible) { destroyToLimbo(seal.champion, true, idx, true); seal.champion = null; } }
+                else if (pPow < cPow) { if (!pCard.userData.isInvincible) { destroyToLimbo(pCard, false, idx); pCard = null; } }
+                else { if (!seal.champion.userData.isInvincible) { destroyToLimbo(seal.champion, true, idx, true); seal.champion = null; } if (!pCard.userData.isInvincible) { destroyToLimbo(pCard, false, idx); pCard = null; } }
                 await sleep(500);
             }
             if (eCard && seal.champion && !seal.champion.userData.isEnemy) {
                 const ePow = eCard.userData.power + eCard.userData.powerMarkers - eCard.userData.weaknessMarkers;
                 const cPow = seal.champion.userData.power + seal.champion.userData.powerMarkers - seal.champion.userData.weaknessMarkers;
-                if (ePow > cPow) {
-                    if (!seal.champion.userData.isInvincible) {
-                        destroyToLimbo(seal.champion, false, idx, true);
-                        seal.champion = null;
-                    }
-                } else if (ePow < cPow) {
-                    if (!eCard.userData.isInvincible) {
-                        destroyToLimbo(eCard, true, idx);
-                        eCard = null;
-                    }
-                } else {
-                    if (!seal.champion.userData.isInvincible) { destroyToLimbo(seal.champion, false, idx, true); seal.champion = null; }
-                    if (!eCard.userData.isInvincible) { destroyToLimbo(eCard, true, idx); eCard = null; }
-                }
+                if (ePow > cPow) { if (!seal.champion.userData.isInvincible) { destroyToLimbo(seal.champion, false, idx, true); seal.champion = null; } }
+                else if (ePow < cPow) { if (!eCard.userData.isInvincible) { destroyToLimbo(eCard, true, idx); eCard = null; } }
+                else { if (!seal.champion.userData.isInvincible) { destroyToLimbo(seal.champion, false, idx, true); seal.champion = null; } if (!eCard.userData.isInvincible) { destroyToLimbo(eCard, true, idx); eCard = null; } }
                 await sleep(500);
             }
             if (pCard && eCard) {
                 const pPow = pCard.userData.power + pCard.userData.powerMarkers - pCard.userData.weaknessMarkers;
                 const ePow = eCard.userData.power + eCard.userData.powerMarkers - eCard.userData.weaknessMarkers;
-                if (pPow > ePow) {
-                    if (!eCard.userData.isInvincible) { destroyToLimbo(eCard, true, idx); eCard = null; }
-                    await handlePostBattleSiege(idx, pPow, true);
-                } else if (ePow > pPow) {
-                    if (!pCard.userData.isInvincible) { destroyToLimbo(pCard, false, idx); pCard = null; }
-                    await handlePostBattleSiege(idx, ePow, false);
-                } else {
-                    if (!pCard.userData.isInvincible) { destroyToLimbo(pCard, false, idx); pCard = null; }
-                    if (!eCard.userData.isInvincible) { destroyToLimbo(eCard, true, idx); eCard = null; }
-                }
+                if (pPow > ePow) { if (!eCard.userData.isInvincible) { destroyToLimbo(eCard, true, idx); eCard = null; } await handlePostBattleSiege(idx, pPow, true); }
+                else if (ePow > pPow) { if (!pCard.userData.isInvincible) { destroyToLimbo(pCard, false, idx); pCard = null; } await handlePostBattleSiege(idx, ePow, false); }
+                else { if (!pCard.userData.isInvincible) { destroyToLimbo(pCard, false, idx); pCard = null; } if (!eCard.userData.isInvincible) { destroyToLimbo(eCard, true, idx); eCard = null; } }
             } else if (pCard) { await handlePostBattleSiege(idx, pCard.userData.power + pCard.userData.powerMarkers - pCard.userData.weaknessMarkers, true); }
             else if (eCard) { await handlePostBattleSiege(idx, eCard.userData.power + eCard.userData.powerMarkers - eCard.userData.weaknessMarkers, false); }
             else { await handlePostBattleSiege(idx, 0, true); }
             await sleep(600);
-
             updateStepLabel("Step E: Ascension");
             const survivor = (playerBattlefield[idx]) ? playerBattlefield[idx] : ((enemyBattlefield[idx]) ? enemyBattlefield[idx] : null);
             if (survivor && survivor.userData.isChampion && !seal.champion) { ascendToSeal(survivor, idx); }
@@ -690,124 +631,70 @@
         }
 
         async function allocateCounters(card, isAI) {
-            const data = card.userData;
-            pendingPowerPool = data.markerPower || 0;
-            pendingWeaknessPool = data.markerWeakness || 0;
+            const data = card.userData; pendingPowerPool = data.markerPower || 0; pendingWeaknessPool = data.markerWeakness || 0;
             if (isAI) {
-                for (let i = 0; i < pendingPowerPool; i++) {
-                    const targets = enemyBattlefield.filter(c => c !== null);
-                    if (targets.length > 0) { targets[0].userData.powerMarkers++; updateCardVisualMarkers(targets[0]); }
-                }
-                for (let i = 0; i < pendingWeaknessPool; i++) {
-                    const targets = playerBattlefield.filter(c => c !== null);
-                    if (targets.length > 0) { targets[0].userData.weaknessMarkers++; updateCardVisualMarkers(targets[0]); }
-                }
-                pendingPowerPool = 0; pendingWeaknessPool = 0;
-                return Promise.resolve();
+                for (let i = 0; i < pendingPowerPool; i++) { const targets = enemyBattlefield.filter(c => c !== null); if (targets.length > 0) { targets[0].userData.powerMarkers++; updateCardVisualMarkers(targets[0]); } }
+                for (let i = 0; i < pendingWeaknessPool; i++) { const targets = playerBattlefield.filter(c => c !== null); if (targets.length > 0) { targets[0].userData.weaknessMarkers++; updateCardVisualMarkers(targets[0]); } }
+                pendingPowerPool = 0; pendingWeaknessPool = 0; return Promise.resolve();
             } else {
-                currentPhase = 'COUNTER_ALLOCATION';
-                document.getElementById('counter-overlay').style.display = 'block';
-                document.getElementById('power-pool-val').innerText = pendingPowerPool;
-                document.getElementById('weakness-pool-val').innerText = pendingWeaknessPool;
+                currentPhase = 'COUNTER_ALLOCATION'; document.getElementById('counter-overlay').style.display = 'block';
+                document.getElementById('power-pool-val').innerText = pendingPowerPool; document.getElementById('weakness-pool-val').innerText = pendingWeaknessPool;
                 return new Promise((resolve) => { resolutionCallback = resolve; });
             }
         }
 
         async function handleTargetedAbility(source, isAI) {
-            const data = source.userData;
-            pendingAbilityData = { source, effect: data.effect, targetType: data.targetType };
-
+            const data = source.userData; pendingAbilityData = { source, effect: data.effect, targetType: data.targetType };
             if (isAI) {
-                const pUnits = [
-                    ...playerBattlefield.filter(c => c !== null),
-                    ...seals.filter(s => s.champion && !s.champion.userData.isEnemy).map(s => s.champion)
-                ];
-                if (pUnits.length > 0) {
-                    pUnits.sort((a,b) => b.userData.power - a.userData.power);
-                    applyAbilityEffect(pUnits[0]);
-                }
-                pendingAbilityData = null;
-                return Promise.resolve();
+                const pUnits = [...playerBattlefield.filter(c => c !== null), ...seals.filter(s => s.champion && !s.champion.userData.isEnemy).map(s => s.champion)];
+                if (pUnits.length > 0) { pUnits.sort((a,b) => b.userData.power - a.userData.power); applyAbilityEffect(pUnits[0]); }
+                pendingAbilityData = null; return Promise.resolve();
             } else {
-                currentPhase = 'ABILITY_TARGETING';
-                document.getElementById('instruction-text').innerText = `Select a target to ${data.effect.toUpperCase()}.`;
+                currentPhase = 'ABILITY_TARGETING'; document.getElementById('instruction-text').innerText = `Select a target to ${data.effect.toUpperCase()}.`;
                 return new Promise((resolve) => { resolutionCallback = resolve; });
             }
         }
 
         function applyAbilityEffect(target) {
             if (!pendingAbilityData) return;
-            const { effect, source } = pendingAbilityData;
-            
-            // Only affect targets that ARE NOT invincible
-            if (target.userData.isInvincible) return;
-
+            const { effect } = pendingAbilityData; if (target.userData.isInvincible) return;
             if (effect === 'destroy') {
-                const targetIdx = enemyBattlefield.indexOf(target);
-                const pTargetIdx = playerBattlefield.indexOf(target);
-                const sealTarget = seals.find(s => s.champion === target);
-
-                if (sealTarget) {
-                    destroyToLimbo(target, target.userData.isEnemy, sealTarget.index, true);
-                    sealTarget.champion = null;
-                } else if (targetIdx !== -1) {
-                    destroyToLimbo(target, true, targetIdx);
-                } else if (pTargetIdx !== -1) {
-                    destroyToLimbo(target, false, pTargetIdx);
-                }
+                const targetIdx = enemyBattlefield.indexOf(target), pTargetIdx = playerBattlefield.indexOf(target), sealTarget = seals.find(s => s.champion === target);
+                if (sealTarget) { destroyToLimbo(target, target.userData.isEnemy, sealTarget.index, true); sealTarget.champion = null; }
+                else if (targetIdx !== -1) { destroyToLimbo(target, true, targetIdx); }
+                else if (pTargetIdx !== -1) { destroyToLimbo(target, false, pTargetIdx); }
             } else if (effect === 'return') {
-                const targetIdx = enemyBattlefield.indexOf(target);
-                const pTargetIdx = playerBattlefield.indexOf(target);
-                const sealTarget = seals.find(s => s.champion === target);
-
-                if (sealTarget) sealTarget.champion = null;
-                else if (targetIdx !== -1) enemyBattlefield[targetIdx] = null;
-                else if (pTargetIdx !== -1) playerBattlefield[pTargetIdx] = null;
-
-                const ownerDeck = target.userData.isEnemy ? enemyDeck : playerDeck;
-                ownerDeck.push({ ...target.userData });
-                
-                gsap.to(target.position, { y: 10, duration: 0.5, onComplete: () => scene.remove(target) });
-                updateUICounters();
+                const targetIdx = enemyBattlefield.indexOf(target), pTargetIdx = playerBattlefield.indexOf(target), sealTarget = seals.find(s => s.champion === target);
+                if (sealTarget) sealTarget.champion = null; else if (targetIdx !== -1) enemyBattlefield[targetIdx] = null; else if (pTargetIdx !== -1) playerBattlefield[pTargetIdx] = null;
+                const ownerDeck = target.userData.isEnemy ? enemyDeck : playerDeck; ownerDeck.push({ ...target.userData });
+                gsap.to(target.position, { y: 10, duration: 0.5, onComplete: () => scene.remove(target) }); updateUICounters();
             }
         }
 
-        function finishCounters() {
-            document.getElementById('counter-overlay').style.display = 'none';
-            currentPhase = 'RESOLUTION';
-            if (resolutionCallback) resolutionCallback();
-            resolutionCallback = null;
-        }
+        function finishCounters() { document.getElementById('counter-overlay').style.display = 'none'; currentPhase = 'RESOLUTION'; if (resolutionCallback) resolutionCallback(); resolutionCallback = null; }
 
         async function handlePostBattleSiege(idx, attackerPower, isPlayer) {
-            const seal = seals[idx];
-            const attacker = isPlayer ? playerBattlefield[idx] : enemyBattlefield[idx];
+            const seal = seals[idx]; const attacker = isPlayer ? playerBattlefield[idx] : enemyBattlefield[idx];
             if (seal.champion && seal.champion.userData.isEnemy === isPlayer) {
                 const champPow = seal.champion.userData.power + seal.champion.userData.powerMarkers - seal.champion.userData.weaknessMarkers;
                 if (attackerPower > champPow) {
-                    if (!seal.champion.userData.isInvincible) {
-                        destroyToLimbo(seal.champion, !isPlayer, idx, true);
-                        seal.champion = null;
-                    }
-                    claimSeal(idx, isPlayer ? 'PURIFIED' : 'CORRUPTED');
-                } else if (attackerPower < champPow) {
-                    if (attacker && !attacker.userData.isInvincible) destroyToLimbo(attacker, !isPlayer, idx);
-                } else if (attackerPower === champPow && attackerPower > 0) {
                     if (!seal.champion.userData.isInvincible) { destroyToLimbo(seal.champion, !isPlayer, idx, true); seal.champion = null; }
-                    if (attacker && !attacker.userData.isInvincible) destroyToLimbo(attacker, !isPlayer, idx);
-                    claimSeal(idx, 'NEUTRAL');
+                    claimSeal(idx, isPlayer ? (playerAlignment === 'LIGHT' ? 'PURIFIED' : 'CORRUPTED') : (playerAlignment === 'LIGHT' ? 'CORRUPTED' : 'PURIFIED'));
+                } else if (attackerPower < champPow) { if (attacker && !attacker.userData.isInvincible) destroyToLimbo(attacker, !isPlayer, idx); }
+                else if (attackerPower === champPow && attackerPower > 0) {
+                    if (!seal.champion.userData.isInvincible) { destroyToLimbo(seal.champion, !isPlayer, idx, true); seal.champion = null; }
+                    if (attacker && !attacker.userData.isInvincible) destroyToLimbo(attacker, !isPlayer, idx); claimSeal(idx, 'NEUTRAL');
                 }
-            } else if (!seal.champion && attackerPower > 0) { claimSeal(idx, isPlayer ? 'PURIFIED' : 'CORRUPTED'); }
+            } else if (!seal.champion && attackerPower > 0) {
+                claimSeal(idx, isPlayer ? (playerAlignment === 'LIGHT' ? 'PURIFIED' : 'CORRUPTED') : (playerAlignment === 'LIGHT' ? 'CORRUPTED' : 'PURIFIED'));
+            }
         }
 
         function destroyToLimbo(card, isEnemy, idx, isChamp = false) {
-            const limboPile = isEnemy ? enemyLimbo : playerLimbo;
-            const limboMesh = isEnemy ? enemyLimboMesh : playerLimboMesh;
-            limboPile.push(card);
-            if (!isChamp) { if (isEnemy) enemyBattlefield[idx] = null; else playerBattlefield[idx] = null; }
+            const limboPile = isEnemy ? enemyLimbo : playerLimbo; const limboMesh = isEnemy ? enemyLimboMesh : playerLimboMesh;
+            limboPile.push(card); if (!isChamp) { if (isEnemy) enemyBattlefield[idx] = null; else playerBattlefield[idx] = null; }
             gsap.to(card.position, { x: limboMesh.position.x + (Math.random()-0.5), y: 0.2 + (limboPile.length * 0.05), z: limboMesh.position.z + (Math.random()-0.5), duration: 0.8, ease: "power2.inOut" });
-            gsap.to(card.rotation, { x: 0, y: Math.random() * 0.5, z: 0, duration: 0.8 });
-            if (card.children[0]) card.children[0].material.emissiveIntensity = 0.3;
+            gsap.to(card.rotation, { x: 0, y: Math.random() * 0.5, z: 0, duration: 0.8 }); if (card.children[0]) card.children[0].material.emissiveIntensity = 0.3;
         }
 
         function claimSeal(idx, status) {
@@ -821,8 +708,7 @@
 
         function ascendToSeal(card, idx) {
             if (card.userData.isEnemy) enemyBattlefield[idx] = null; else playerBattlefield[idx] = null;
-            seals[idx].champion = card;
-            gsap.to(card.position, { x: seals[idx].mesh.position.x, y: 0.6, z: 0, duration: 0.6, ease: "back.out" });
+            seals[idx].champion = card; gsap.to(card.position, { x: seals[idx].mesh.position.x, y: 0.6, z: 0, duration: 0.6, ease: "back.out" });
             if (card.children[0]) card.children[0].material.emissiveIntensity = 1.0;
         }
 
@@ -831,15 +717,16 @@
 
         function restartGame() {
             document.getElementById('msg-overlay').style.display = 'none';
+            document.getElementById('selection-overlay').style.display = 'flex';
             [...playerHand, ...playerLimbo, ...enemyLimbo, ...playerBattlefield, ...enemyBattlefield].forEach(card => { if (card) scene.remove(card); });
             seals.forEach(seal => { if (seal.champion) scene.remove(seal.champion); seal.champion = null; seal.alignment = 'NEUTRAL'; seal.mesh.material.emissive.setHex(0x080808); seal.light.intensity = 0; });
             document.querySelectorAll('.seal-node').forEach(node => node.className = 'seal-node');
             playerBattlefield = Array(SEVEN).fill(null); enemyBattlefield = Array(SEVEN).fill(null);
-            playerDeck = buildDeck(LIGHT_POOL, "Avatar", "God"); enemyDeck = buildDeck(DARK_POOL, "Avatar", "God");
-            currentRound = 1; document.getElementById('round-indicator').innerText = `ROUND 1`;
+            playerHand = []; playerLimbo = []; enemyLimbo = []; currentRound = 1;
+            document.getElementById('round-indicator').innerText = `ROUND 1`;
             document.getElementById('p1-score').innerText = `0 / 7`; document.getElementById('p2-score').innerText = `0 / 7`;
             gsap.to(camera.position, { x: 0, y: 28, z: 32, duration: 1.5 }); cameraTarget.set(0, 0, -2);
-            isProcessing = false; updateUICounters(); startPrepPhase();
+            isProcessing = false;
         }
 
         function onMouseMove(event) {
@@ -854,13 +741,8 @@
                     if (selectedObject && playerHand.includes(selectedObject)) gsap.to(selectedObject.position, { y: tuning.height, duration: 0.2 });
                     if (playerHand.includes(card)) gsap.to(card.position, { y: tuning.height + 1.5, duration: 0.2 });
                     selectedObject = card; tooltip.style.opacity = 1; tooltip.style.left = event.clientX + 20 + 'px'; tooltip.style.top = event.clientY - 40 + 'px';
-                    const data = card.userData;
-                    const effPow = data.power + data.powerMarkers - data.weaknessMarkers;
-                    tooltip.innerHTML = `
-                        <div style="font-weight: bold; font-size: 1.1rem; margin-bottom: 5px;">${data.name} ${data.isInvincible ? '<span style="color:cyan">[INVINCIBLE]</span>' : ''}</div>
-                        <div style="color: ${data.isEnemy ? '#f88' : '#8ff'}; font-size: 0.7rem; letter-spacing: 1px; margin-bottom: 5px;">${data.faction.toUpperCase()} / ${data.isChampion ? 'CHAMPION' : data.type.toUpperCase()}</div>
-                        <div style="font-size: 1.2rem; font-weight: bold; margin: 10px 0;">EFF. POWER: ${effPow} <span style="font-size: 0.7rem; font-weight: normal; color: #aaa;">(${data.power} +${data.powerMarkers} -${data.weaknessMarkers})</span></div>
-                        <div class="tooltip-ability">${data.ability}</div>`;
+                    const data = card.userData; const effPow = data.power + data.powerMarkers - data.weaknessMarkers;
+                    tooltip.innerHTML = `<div style="font-weight: bold; font-size: 1.1rem; margin-bottom: 5px;">${data.name} ${data.isInvincible ? '<span style="color:cyan">[INVINCIBLE]</span>' : ''}</div><div style="color: ${data.isEnemy ? '#f88' : '#8ff'}; font-size: 0.7rem; letter-spacing: 1px; margin-bottom: 5px;">${data.faction.toUpperCase()} / ${data.isChampion ? 'CHAMPION' : data.type.toUpperCase()}</div><div style="font-size: 1.2rem; font-weight: bold; margin: 10px 0;">EFF. POWER: ${effPow} <span style="font-size: 0.7rem; font-weight: normal; color: #aaa;">(${data.power} +${data.powerMarkers} -${data.weaknessMarkers})</span></div><div class="tooltip-ability">${data.ability}</div>`;
                 }
             } else {
                 if (selectedObject && playerHand.includes(selectedObject)) gsap.to(selectedObject.position, { y: tuning.height, duration: 0.2 });
@@ -875,8 +757,7 @@
                 if (handIntersects.length > 0) {
                     let card = handIntersects[0].object; while (card.parent && !playerHand.includes(card)) card = card.parent;
                     if (activeSelection && activeSelection.children[0]) activeSelection.children[0].material.emissiveIntensity = 0.8;
-                    activeSelection = card; if (activeSelection.children[0]) activeSelection.children[0].material.emissiveIntensity = 2.5;
-                    return;
+                    activeSelection = card; if (activeSelection.children[0]) activeSelection.children[0].material.emissiveIntensity = 2.5; return;
                 }
                 if (activeSelection) {
                     const tableIntersects = raycaster.intersectObjects([floorMesh]);
@@ -903,19 +784,15 @@
                     if (pendingPowerPool > 0) { card.userData.powerMarkers++; pendingPowerPool--; }
                     else if (pendingWeaknessPool > 0) { card.userData.weaknessMarkers++; pendingWeaknessPool--; }
                     document.getElementById('power-pool-val').innerText = pendingPowerPool;
-                    document.getElementById('weakness-pool-val').innerText = pendingWeaknessPool;
-                    updateCardVisualMarkers(card);
+                    document.getElementById('weakness-pool-val').innerText = pendingWeaknessPool; updateCardVisualMarkers(card);
                 }
             } else if (currentPhase === 'ABILITY_TARGETING') {
                 const allBoard = [...playerBattlefield, ...enemyBattlefield, ...seals.map(s => s.champion)].filter(c => c !== null);
                 const intersects = raycaster.intersectObjects(allBoard, true);
                 if (intersects.length > 0) {
                     let card = intersects[0].object; while (card.parent && !allBoard.includes(card)) card = card.parent;
-                    applyAbilityEffect(card);
-                    currentPhase = 'RESOLUTION';
-                    pendingAbilityData = null;
-                    document.getElementById('instruction-text').innerText = "";
-                    if (resolutionCallback) resolutionCallback();
+                    applyAbilityEffect(card); currentPhase = 'RESOLUTION'; pendingAbilityData = null;
+                    document.getElementById('instruction-text').innerText = ""; if (resolutionCallback) resolutionCallback();
                     resolutionCallback = null;
                 }
             }
@@ -924,14 +801,47 @@
         function onWindowResize() { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); }
         function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
         function updateStepLabel(txt) { const el = document.getElementById('phase-step-label'); el.style.opacity = 0; setTimeout(() => { el.innerText = txt; el.style.opacity = 1; }, 200); }
-        function updateGlobalScores() { const p1 = seals.filter(s => s.alignment === 'PURIFIED').length; const p2 = seals.filter(s => s.alignment === 'CORRUPTED').length; document.getElementById('p1-score').innerText = `${p1} / 7`; document.getElementById('p2-score').innerText = `${p2} / 7`; }
-        function checkVictory() { const p1 = seals.filter(s => s.alignment === 'PURIFIED').length; const p2 = seals.filter(s => s.alignment === 'CORRUPTED').length; if (p1 === 7 || p2 === 7) showGameOver(p1 === 7 ? "THE GREAT ASCENSION" : "THE FINAL ECLIPSE", p1 === 7 ? "Utopia established. The Light prevails." : "The Void consumes all."); }
-        function finalizeGame() { const p1 = seals.filter(s => s.alignment === 'PURIFIED').length; const p2 = seals.filter(s => s.alignment === 'CORRUPTED').length; showGameOver("CYCLE COMPLETE", p1 > p2 ? "Player 1 (Light) controls the majority." : "Player 2 (Darkness) controls the majority."); }
+        
+        function updateGlobalScores() { 
+            const pAlign = playerAlignment === 'LIGHT' ? 'PURIFIED' : 'CORRUPTED';
+            const eAlign = playerAlignment === 'LIGHT' ? 'CORRUPTED' : 'PURIFIED';
+            const pCount = seals.filter(s => s.alignment === pAlign).length;
+            const eCount = seals.filter(s => s.alignment === eAlign).length;
+            document.getElementById('p1-score').innerText = `${pCount} / 7`; 
+            document.getElementById('p2-score').innerText = `${eCount} / 7`; 
+        }
+
+        function checkVictory() { 
+            const pAlign = playerAlignment === 'LIGHT' ? 'PURIFIED' : 'CORRUPTED';
+            const eAlign = playerAlignment === 'LIGHT' ? 'CORRUPTED' : 'PURIFIED';
+            const pCount = seals.filter(s => s.alignment === pAlign).length;
+            const eCount = seals.filter(s => s.alignment === eAlign).length;
+            if (pCount === 7) showGameOver("THE GREAT ASCENSION", "You have achieved total alignment. The Light prevails.");
+            else if (eCount === 7) showGameOver("THE FINAL ECLIPSE", "The cycle is broken. The Void consumes all.");
+        }
+
+        function finalizeGame() { 
+            const pAlign = playerAlignment === 'LIGHT' ? 'PURIFIED' : 'CORRUPTED';
+            const eAlign = playerAlignment === 'LIGHT' ? 'CORRUPTED' : 'PURIFIED';
+            const pCount = seals.filter(s => s.alignment === pAlign).length;
+            const eCount = seals.filter(s => s.alignment === eAlign).length;
+            const neutralCount = seals.filter(s => s.alignment === 'NEUTRAL').length;
+
+            if (neutralCount > 0) {
+                showGameOver("THE STAGNANT ERA", "The cycle ends in a stalemate. Unclaimed seals prevent total convergence.");
+            } else if (pCount > eCount) {
+                showGameOver("VICTORY", "You have secured the majority. Your alignment shapes the next world.");
+            } else if (eCount > pCount) {
+                showGameOver("DEFEAT", "The opponent has secured the majority. The world yields to their rhythm.");
+            } else {
+                showGameOver("A DRAW", "The forces are perfectly balanced. Neither side prevails.");
+            }
+        }
+
         function showGameOver(title, body) { currentPhase = 'GAME_OVER'; document.getElementById('msg-overlay').style.display = 'flex'; document.getElementById('msg-title').innerText = title; document.getElementById('msg-body').innerText = body; }
 
         function animate() {
-            requestAnimationFrame(animate);
-            if (camera && cameraTarget) camera.lookAt(cameraTarget);
+            requestAnimationFrame(animate); if (camera && cameraTarget) camera.lookAt(cameraTarget);
             const time = Date.now() * 0.001;
             if (currentPhase === 'PREP') {
                 playerHand.forEach(card => {

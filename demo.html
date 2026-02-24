@@ -256,7 +256,7 @@
             { name: "War", faction: "Darkness", type: "Horseman", power: 9, isChampion: true, ability: "Post-Combat: Gain 3 Power Markers after destroying a creature.", markerPower: 3, needsAllocation: true },
             { name: "Lilith", faction: "Darkness", type: "Avatar", power: 10, isChampion: true, ability: "Win Con: Activate with 5+ Seals." },
             { name: "Hades", faction: "Darkness", type: "Avatar", power: 9, isChampion: true, ability: "Flip: Gain 2 Power Markers.", markerPower: 2, needsAllocation: true },
-            { name: "The Destroyer", faction: "Darkness", type: "God", power: 15, isChampion: true, ability: "Flip: Corrupt Purified Seals without Champions.", hasSealTargetAbility: true, sealEffect: 'CORRUPTED' },
+            { name: "The Destroyer", faction: "Darkness", type: "God", power: 15, isChampion: true, ability: "Flip: Corrupt un-championed non-Darkness Seals.", hasGlobalAbility: true, effect: 'corrupt_undefended' },
             { name: "Wrath", faction: "Daemon", type: "Creature", power: 7, isChampion: false, ability: "Flip: Enemy loses 1 Power.", markerWeakness: 1, needsAllocation: true },
             { name: "Pride", faction: "Daemon", type: "Creature", power: 6, isChampion: false, ability: "Flip: Card across loses 3 Power.", markerWeakness: 3, needsAllocation: true },
             { name: "Greed", faction: "Daemon", type: "Creature", power: 5, isChampion: false, ability: "Flip: Battle invulnerability." },
@@ -288,8 +288,7 @@
         let enemyBattlefield = Array(SEVEN).fill(null);
         let playerHand = [], playerLimbo = [], enemyLimbo = [], playerDeck = [], enemyDeck = [];
         
-        let currentRound = 1;
-        let currentPhase = 'PREP'; 
+        let currentRound = 1, currentPhase = 'PREP'; 
         let selectedObject = null, activeSelection = null, isProcessing = false;
         let pendingPowerPool = 0, pendingWeaknessPool = 0, pendingAbilityData = null, resolutionCallback = null;
 
@@ -577,7 +576,8 @@
         }
 
         async function executeGlobalAbility(source) {
-            if (source.userData.effect === 'siphon_all') {
+            const ud = source.userData;
+            if (ud.effect === 'siphon_all') {
                 const allBoardCards = [...playerBattlefield, ...enemyBattlefield, ...seals.map(s => s.champion)].filter(c => c !== null && c !== source);
                 let totalP = 0, totalW = 0;
                 allBoardCards.forEach(c => {
@@ -585,6 +585,10 @@
                     c.userData.powerMarkers = 0; c.userData.weaknessMarkers = 0; updateCardVisualMarkers(c);
                 });
                 source.userData.powerMarkers += totalP; source.userData.weaknessMarkers += totalW; updateCardVisualMarkers(source);
+                await sleep(600);
+            } else if (ud.effect === 'corrupt_undefended') {
+                const targets = seals.filter(s => !s.champion && s.alignment !== 'CORRUPTED');
+                for (let s of targets) { claimSeal(s.index, 'CORRUPTED'); }
                 await sleep(600);
             }
         }
@@ -737,9 +741,14 @@
             const seal = seals[idx]; const attacker = isPlayer ? playerBattlefield[idx] : enemyBattlefield[idx];
             if (seal.champion && seal.champion.userData.isEnemy === isPlayer) {
                 const champPow = seal.champion.userData.power + seal.champion.userData.powerMarkers - seal.champion.userData.weaknessMarkers;
-                if (attackerPower > champPow) { if (!seal.champion.userData.isInvincible) { destroyToLimbo(seal.champion, !isPlayer, idx, true); seal.champion = null; } claimSeal(idx, isPlayer ? (playerAlignment === 'LIGHT' ? 'PURIFIED' : 'CORRUPTED') : (playerAlignment === 'LIGHT' ? 'CORRUPTED' : 'PURIFIED')); }
-                else if (attackerPower < champPow) { if (attacker && !attacker.userData.isInvincible) destroyToLimbo(attacker, !isPlayer, idx); }
-                else if (attackerPower === champPow && attackerPower > 0) { if (!seal.champion.userData.isInvincible) { destroyToLimbo(seal.champion, !isPlayer, idx, true); seal.champion = null; } if (attacker && !attacker.userData.isInvincible) destroyToLimbo(attacker, !isPlayer, idx); claimSeal(idx, 'NEUTRAL'); }
+                if (attackerPower > champPow) {
+                    if (!seal.champion.userData.isInvincible) { destroyToLimbo(seal.champion, !isPlayer, idx, true); seal.champion = null; }
+                    claimSeal(idx, isPlayer ? (playerAlignment === 'LIGHT' ? 'PURIFIED' : 'CORRUPTED') : (playerAlignment === 'LIGHT' ? 'CORRUPTED' : 'PURIFIED'));
+                } else if (attackerPower < champPow) { if (attacker && !attacker.userData.isInvincible) destroyToLimbo(attacker, !isPlayer, idx); }
+                else if (attackerPower === champPow && attackerPower > 0) {
+                    if (!seal.champion.userData.isInvincible) { destroyToLimbo(seal.champion, !isPlayer, idx, true); seal.champion = null; }
+                    if (attacker && !attacker.userData.isInvincible) destroyToLimbo(attacker, !isPlayer, idx); claimSeal(idx, 'NEUTRAL');
+                }
             } else if (!seal.champion && attackerPower > 0) {
                 claimSeal(idx, isPlayer ? (playerAlignment === 'LIGHT' ? 'PURIFIED' : 'CORRUPTED') : (playerAlignment === 'LIGHT' ? 'CORRUPTED' : 'PURIFIED'));
             }
@@ -869,17 +878,20 @@
         function onWindowResize() { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); }
         function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
         function updateStepLabel(txt) { const el = document.getElementById('phase-step-label'); el.style.opacity = 0; setTimeout(() => { el.innerText = txt; el.style.opacity = 1; }, 200); }
+        
         function updateGlobalScores() { 
             const pAlign = playerAlignment === 'LIGHT' ? 'PURIFIED' : 'CORRUPTED', eAlign = playerAlignment === 'LIGHT' ? 'CORRUPTED' : 'PURIFIED';
             const pCount = seals.filter(s => s.alignment === pAlign).length, eCount = seals.filter(s => s.alignment === eAlign).length;
             document.getElementById('p1-score').innerText = `${pCount} / 7`; document.getElementById('p2-score').innerText = `${eCount} / 7`; 
         }
+
         function checkVictory() { 
             const pAlign = playerAlignment === 'LIGHT' ? 'PURIFIED' : 'CORRUPTED', eAlign = playerAlignment === 'LIGHT' ? 'CORRUPTED' : 'PURIFIED';
             const pCount = seals.filter(s => s.alignment === pAlign).length, eCount = seals.filter(s => s.alignment === eAlign).length;
             if (pCount === 7) showGameOver("THE GREAT ASCENSION", "You have achieved total alignment. Your path prevails.");
             else if (eCount === 7) showGameOver("THE FINAL ECLIPSE", "The cycle is broken. The Void consumes all.");
         }
+
         function finalizeGame() { 
             const pAlign = playerAlignment === 'LIGHT' ? 'PURIFIED' : 'CORRUPTED', eAlign = playerAlignment === 'LIGHT' ? 'CORRUPTED' : 'PURIFIED';
             const pCount = seals.filter(s => s.alignment === pAlign).length, eCount = seals.filter(s => s.alignment === eAlign).length;
@@ -889,7 +901,9 @@
             else if (eCount > pCount) showGameOver("DEFEAT", "The opponent has secured the majority. The world yields to their rhythm.");
             else showGameOver("A DRAW", "The forces are perfectly balanced. Neither side prevails.");
         }
+
         function showGameOver(title, body) { currentPhase = 'GAME_OVER'; document.getElementById('msg-overlay').style.display = 'flex'; document.getElementById('msg-title').innerText = title; document.getElementById('msg-body').innerText = body; }
+
         function animate() {
             requestAnimationFrame(animate); if (camera && cameraTarget) camera.lookAt(cameraTarget);
             const time = Date.now() * 0.001;

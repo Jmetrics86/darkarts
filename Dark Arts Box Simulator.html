@@ -16,6 +16,24 @@
             outline: 2px solid #4f46e5;
             outline-offset: 2px;
         }
+        /* Instant custom tooltip styling */
+        .has-tooltip {
+            position: relative;
+        }
+        .custom-tooltip {
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.15s ease-in-out, transform 0.15s ease-in-out;
+            transform: translateY(4px);
+            pointer-events: none;
+            z-index: 50;
+        }
+        .has-tooltip:hover .custom-tooltip,
+        .has-tooltip:focus-within .custom-tooltip {
+            visibility: visible;
+            opacity: 1;
+            transform: translateY(0);
+        }
     </style>
 
     <script>
@@ -114,16 +132,16 @@
                     "Loan Repayment": { cost: 3300, desc: "Pre-launch seed loan repayment." }
                 },
 
-                // --- DEFAULT STATE (Matches Reference Image) ---
+                // --- DEFAULT STATE ---
                 boxL: 356,
                 boxW: 356,
                 boxH: 153,
                 qty: 1500,
                 pledgePrice: 59.99,
                 shippingCharge: 20,
-                packedInsideBox: true, // true = Master SKU (1 pick), false = Loose SKUs (QML pick fees apply >3 items)
+                packedInsideBox: true,
                 includeSafetyTesting: true,
-                includeStretchGoalTooling: false, // $580 total ($186 Coins + $208 Pins + $186 Stickers)
+                includeStretchGoalTooling: false,
                 selectedItems: [
                     "Base Game (Cards + Manual)", 
                     "Paper Playmat (Rules Sheet)", 
@@ -134,7 +152,6 @@
                 copyStatus: '',
 
                 init() {
-                    // Load state from URL parameters if shared by a teammate
                     const params = new URLSearchParams(window.location.search);
                     if (params.has('l')) this.boxL = Number(params.get('l'));
                     if (params.has('w')) this.boxW = Number(params.get('w'));
@@ -302,7 +319,6 @@
                         const fitsRotated = data.w <= this.boxL && data.l <= this.boxW;
                         const individualFit = fitsNormally || fitsRotated;
 
-                        // Pricing Tier Lookup
                         const pricing = data.pricing;
                         const sortedTiers = Object.keys(pricing).map(Number).sort((a, b) => a - b);
                         let bestTier = sortedTiers[0];
@@ -322,7 +338,8 @@
                             w: data.w,
                             h: data.h,
                             tier: bestTier,
-                            price: price
+                            price: price,
+                            desc: data.desc
                         });
 
                         if (!individualFit && data.l > 0) {
@@ -332,13 +349,11 @@
                         tiersAchieved.push({ name: itemKey, tier: bestTier, price: price });
                     });
 
-                    // Unit Financials
                     const unitMfgCost = tiersAchieved.reduce((sum, t) => sum + t.price, 0);
                     const freight = unitMfgCost * 0.30;
                     const tariffs = unitMfgCost * 0.20;
                     const landedCost = unitMfgCost + freight + tariffs;
                     
-                    // QML Pick & Pack Logic (First 3 SKUs free, 4+ is $0.25 each if shipped loose)
                     const physicalSkuCount = this.selectedItems.filter(i => this.components[i]?.l > 0).length;
                     const effectiveSkus = this.packedInsideBox ? 1 : physicalSkuCount;
                     const extraPickFee = effectiveSkus > 3 ? (effectiveSkus - 3) * 0.25 : 0;
@@ -350,7 +365,6 @@
                     const contingencyFee = (landedCost + fulfillmentTotal) * 0.15;
                     const totalVariableCost = landedCost + fulfillmentTotal + ksFee + contingencyFee;
                     
-                    // Fixed Costs Calculation (Dynamic based on active components & toggles)
                     let totalFixed = 0;
                     let activeFixedBreakdown = [];
                     Object.entries(this.fixedCosts).forEach(([key, obj]) => {
@@ -363,11 +377,10 @@
                     });
 
                     if (this.includeStretchGoalTooling) {
-                        totalFixed += 580; // $186 Coins + $208 Pins + $186 Stickers
+                        totalFixed += 580;
                         activeFixedBreakdown.push({ name: "Stretch Goal 1 Tooling (Coins, Pins, Stickers)", cost: 580, desc: "Coins ($186) + Pins ($208) + Stickers ($186) per Launch Plan V11." });
                     }
 
-                    // Pre-Tax & Post-Tax Profit
                     const unitProfitPreTax = grossUnitRev - totalVariableCost;
                     const projectNetPreTax = (unitProfitPreTax * this.qty) - totalFixed;
 
@@ -377,16 +390,14 @@
                     const unitTaxReserve = projectNetPreTax > 0 ? (totalTaxReserve / this.qty) : 0;
                     const unitProfitFinal = unitProfitPreTax - (totalFixed / this.qty) - unitTaxReserve;
 
-                    // Spatial Volume Checks
                     const boxVolume = Math.max(1, this.boxL * this.boxW * this.boxH);
                     const efficiencyThreshold = boxVolume * 0.85;
                     if (stackedHeight > this.boxH) {
                         warnings.push(`Combined stacked height (${stackedHeight}mm) exceeds box height (${this.boxH}mm).`);
                     }
 
-                    // Cash Flow Milestones (Panda 50% deposit + 100% tooling)
                     const totalMfgRun = unitMfgCost * this.qty;
-                    const toolingOnly = totalFixed - 3300; // Exclude loan repayment from Panda invoice
+                    const toolingOnly = totalFixed - 3300;
                     const depositAtSigning = (totalMfgRun * 0.50) + Math.max(0, toolingOnly);
                     const dueAtMPC = (totalMfgRun * 0.50) + ((freight + tariffs) * this.qty);
                     const breakEvenUnits = unitProfitPreTax > 0 ? Math.ceil(totalFixed / unitProfitPreTax) : 'N/A';
@@ -448,13 +459,19 @@
         <!-- Export & Share Actions -->
         <div class="flex flex-wrap items-center gap-2">
             <span x-show="copyStatus" x-text="copyStatus" class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200"></span>
-            <button @click="copyShareLink()" class="px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 flex items-center gap-1.5 shadow-sm transition" title="Copy URL with your exact current settings for teammates">
+            <button @click="copyShareLink()" class="has-tooltip px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 flex items-center gap-1.5 shadow-sm transition">
                 <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
                 Share Link
+                <div class="custom-tooltip absolute top-full right-0 mt-2 w-56 p-2.5 bg-slate-900 text-white text-[11px] font-normal rounded-xl shadow-xl">
+                    Copies a shareable URL containing your exact current box, pricing, and component settings.
+                </div>
             </button>
-            <button @click="copyExecutiveSummary()" class="px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 flex items-center gap-1.5 shadow-sm transition" title="Copy formatted text summary for Discord or Email">
+            <button @click="copyExecutiveSummary()" class="has-tooltip px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 flex items-center gap-1.5 shadow-sm transition">
                 <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
                 Copy Summary
+                <div class="custom-tooltip absolute top-full right-0 mt-2 w-56 p-2.5 bg-slate-900 text-white text-[11px] font-normal rounded-xl shadow-xl">
+                    Copies a formatted text P&L briefing to your clipboard for Discord, Slack, or Email.
+                </div>
             </button>
             <button @click="exportFinancialCSV()" class="px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-xs font-bold text-white flex items-center gap-1.5 shadow-sm transition">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
@@ -476,7 +493,12 @@
                 <section class="space-y-3">
                     <div class="flex items-center justify-between">
                         <h2 class="text-[11px] font-bold uppercase tracking-widest text-slate-400">Box Dimensions (mm)</h2>
-                        <span class="text-[10px] text-slate-400" title="Panda Quote default is 365x300x98mm; 85% max packing efficiency applied.">ⓘ 85% Air Buffer</span>
+                        <div class="has-tooltip text-[10px] text-indigo-600 font-semibold cursor-help">
+                            ⓘ 85% Buffer
+                            <div class="custom-tooltip absolute bottom-full right-0 mb-2 w-60 p-3 bg-slate-900 text-white text-[11px] font-normal rounded-xl shadow-xl">
+                                Panda Quote default box is 365×300×98mm. A 15% air-gap buffer (85% max packing efficiency) is enforced.
+                            </div>
+                        </div>
                     </div>
                     <div class="grid grid-cols-3 gap-2">
                         <div>
@@ -544,22 +566,32 @@
                     </label>
                 </section>
 
-                <!-- Components Selector -->
+                <!-- Components Selector with Instant Custom Tooltips -->
                 <section class="space-y-2 pt-2 border-t border-slate-100">
-                    <h2 class="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-2">Include Components</h2>
+                    <h2 class="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-2">Include Components (Hover for Spec)</h2>
                     <template x-for="(data, name) in components" :key="name">
-                        <button @click="toggleItem(name)" :disabled="data.required"
-                            :title="data.desc"
-                            :class="selectedItems.includes(name) ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-slate-200 bg-white hover:border-slate-300'"
-                            class="w-full flex items-center justify-between p-2.5 rounded-xl border text-left text-xs font-medium transition-all">
-                            <span class="flex items-center gap-2 truncate">
-                                <span class="w-2.5 h-2.5 rounded-full shrink-0" :style="'background-color: ' + data.color"></span>
-                                <span class="truncate" x-text="name"></span>
-                            </span>
-                            <template x-if="selectedItems.includes(name)">
-                                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
-                            </template>
-                        </button>
+                        <div class="has-tooltip">
+                            <button @click="toggleItem(name)" :disabled="data.required"
+                                :class="selectedItems.includes(name) ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-slate-200 bg-white hover:border-slate-300'"
+                                class="w-full flex items-center justify-between p-2.5 rounded-xl border text-left text-xs font-medium transition-all">
+                                <span class="flex items-center gap-2 truncate">
+                                    <span class="w-2.5 h-2.5 rounded-full shrink-0" :style="'background-color: ' + data.color"></span>
+                                    <span class="truncate" x-text="name"></span>
+                                </span>
+                                <template x-if="selectedItems.includes(name)">
+                                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                                </template>
+                            </button>
+                            <!-- Instant Spec Tooltip -->
+                            <div class="custom-tooltip absolute left-0 bottom-full mb-1.5 w-64 p-3 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl">
+                                <div class="font-bold text-indigo-300 mb-0.5" x-text="name"></div>
+                                <div class="text-slate-200 leading-snug" x-text="data.desc"></div>
+                                <div class="mt-1.5 pt-1.5 border-t border-slate-700 flex justify-between text-[10px] text-slate-400 font-mono">
+                                    <span x-text="data.l > 0 ? data.l + 'x' + data.w + 'x' + data.h + 'mm' : 'Surface Upgrade'"></span>
+                                    <span x-text="data.weightKg + ' kg'"></span>
+                                </div>
+                            </div>
+                        </div>
                     </template>
                 </section>
             </div>
@@ -607,53 +639,128 @@
                 </div>
             </template>
 
-            <!-- Unit Cost Breakdown & Interactive Tooltips -->
+            <!-- Unit Cost Breakdown with Instant Popover Tooltips -->
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-6">
                 <div class="flex items-center justify-between">
-                    <h2 class="text-xs font-bold uppercase tracking-widest text-slate-500">Unit Economics (Hover Any Metric for Formula)</h2>
+                    <h2 class="text-xs font-bold uppercase tracking-widest text-slate-500">Unit Economics (Hover Any Card for Live Math)</h2>
                     <span class="text-xs font-semibold text-slate-500">Gross Collected / Unit: <strong class="text-slate-900" x-text="'$' + results().grossUnitRev.toFixed(2)"></strong></span>
                 </div>
 
                 <div class="grid grid-cols-2 md:grid-cols-6 gap-4">
-                    <div class="p-3 rounded-xl bg-slate-50 border border-slate-100 cursor-help" :title="'Sum of Panda EXW prices at ' + qty + ' units'">
-                        <div class="text-[10px] text-slate-400 font-bold uppercase mb-1">Unit Mfg ⓘ</div>
+                    <!-- Unit Mfg Card -->
+                    <div class="has-tooltip p-3 rounded-xl bg-slate-50 hover:bg-indigo-50/50 border border-slate-200 transition cursor-help">
+                        <div class="text-[10px] text-slate-500 font-bold uppercase mb-1 flex justify-between">
+                            <span>Unit Mfg</span><span class="text-indigo-500">ⓘ</span>
+                        </div>
                         <div class="text-lg font-black text-slate-800" x-text="'$' + results().unitMfgCost.toFixed(2)"></div>
+                        <div class="custom-tooltip absolute bottom-full left-0 mb-2 w-64 p-3 bg-slate-900 text-white text-xs rounded-xl shadow-xl">
+                            <div class="font-bold text-indigo-300 mb-1">Panda EXW Manufacturing</div>
+                            <p class="text-[11px] text-slate-300 leading-relaxed">Sum of active component unit prices at your <span class="text-white font-bold" x-text="qty"></span>-unit tier.</p>
+                            <div class="mt-2 pt-2 border-t border-slate-700 flex justify-between font-mono text-[11px]">
+                                <span>Project Total:</span>
+                                <span class="text-emerald-400 font-bold" x-text="formatCurrency(results().unitMfgCost * qty)"></span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="p-3 rounded-xl bg-slate-50 border border-slate-100 cursor-help" :title="'Mfg ($' + results().unitMfgCost.toFixed(2) + ') + 30% LCL Freight ($' + results().freight.toFixed(2) + ') + 20% US Tariff ($' + results().tariffs.toFixed(2) + ')'">
-                        <div class="text-[10px] text-slate-400 font-bold uppercase mb-1">Landed Cost ⓘ</div>
+
+                    <!-- Landed Cost Card -->
+                    <div class="has-tooltip p-3 rounded-xl bg-slate-50 hover:bg-indigo-50/50 border border-slate-200 transition cursor-help">
+                        <div class="text-[10px] text-slate-500 font-bold uppercase mb-1 flex justify-between">
+                            <span>Landed Cost</span><span class="text-indigo-500">ⓘ</span>
+                        </div>
                         <div class="text-lg font-black text-slate-800" x-text="'$' + results().landedCost.toFixed(2)"></div>
+                        <div class="custom-tooltip absolute bottom-full left-0 mb-2 w-64 p-3 bg-slate-900 text-white text-xs rounded-xl shadow-xl">
+                            <div class="font-bold text-sky-300 mb-1">Landed Cost in Orlando, FL</div>
+                            <div class="space-y-1 text-[11px] text-slate-300 font-mono">
+                                <div class="flex justify-between"><span>Mfg (EXW):</span><span x-text="'$' + results().unitMfgCost.toFixed(2)"></span></div>
+                                <div class="flex justify-between"><span>LCL Freight (30%):</span><span x-text="'$' + results().freight.toFixed(2)"></span></div>
+                                <div class="flex justify-between"><span>US Tariffs (20%):</span><span x-text="'$' + results().tariffs.toFixed(2)"></span></div>
+                            </div>
+                            <div class="mt-2 pt-2 border-t border-slate-700 flex justify-between font-mono text-[11px]">
+                                <span>Project Landed:</span>
+                                <span class="text-sky-300 font-bold" x-text="formatCurrency(results().landedCost * qty)"></span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="p-3 rounded-xl bg-slate-50 border border-slate-100 cursor-help" title="10% Kickstarter Platform (5%) + Stripe Payment Processing (~5%) on Pledge + Shipping">
-                        <div class="text-[10px] text-rose-500 font-bold uppercase mb-1">KS Fee (10%) ⓘ</div>
+
+                    <!-- KS Fee Card -->
+                    <div class="has-tooltip p-3 rounded-xl bg-slate-50 hover:bg-rose-50/50 border border-slate-200 transition cursor-help">
+                        <div class="text-[10px] text-rose-500 font-bold uppercase mb-1 flex justify-between">
+                            <span>KS Fee (10%)</span><span>ⓘ</span>
+                        </div>
                         <div class="text-lg font-black text-rose-500" x-text="'$' + results().ksFee.toFixed(2)"></div>
+                        <div class="custom-tooltip absolute bottom-full left-0 mb-2 w-64 p-3 bg-slate-900 text-white text-xs rounded-xl shadow-xl">
+                            <div class="font-bold text-rose-300 mb-1">Platform & Processing (10%)</div>
+                            <p class="text-[11px] text-slate-300 leading-relaxed">5% Kickstarter fee + ~5% Stripe processing charged on <strong>both</strong> Pledge (<span x-text="'$' + pledgePrice"></span>) and Shipping (<span x-text="'$' + shippingCharge"></span>).</p>
+                            <div class="mt-2 pt-2 border-t border-slate-700 flex justify-between font-mono text-[11px]">
+                                <span>Project Fees:</span>
+                                <span class="text-rose-300 font-bold" x-text="formatCurrency(results().ksFee * qty)"></span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="p-3 rounded-xl bg-slate-50 border border-slate-100 cursor-help" title="15% Contingency Buffer calculated on (Landed Cost + QML Fulfillment)">
-                        <div class="text-[10px] text-amber-600 font-bold uppercase mb-1">Contingency ⓘ</div>
+
+                    <!-- Contingency Card -->
+                    <div class="has-tooltip p-3 rounded-xl bg-slate-50 hover:bg-amber-50/50 border border-slate-200 transition cursor-help">
+                        <div class="text-[10px] text-amber-600 font-bold uppercase mb-1 flex justify-between">
+                            <span>Contingency</span><span>ⓘ</span>
+                        </div>
                         <div class="text-lg font-black text-amber-600" x-text="'$' + results().contingencyFee.toFixed(2)"></div>
+                        <div class="custom-tooltip absolute bottom-full right-0 mb-2 w-64 p-3 bg-slate-900 text-white text-xs rounded-xl shadow-xl">
+                            <div class="font-bold text-amber-300 mb-1">15% Contingency Reserve</div>
+                            <p class="text-[11px] text-slate-300 leading-relaxed">15% buffer applied to Landed Cost (<span x-text="'$' + results().landedCost.toFixed(2)"></span>) + QML Fulfillment (<span x-text="'$' + results().fulfillment.toFixed(2)"></span>).</p>
+                            <div class="mt-2 pt-2 border-t border-slate-700 flex justify-between font-mono text-[11px]">
+                                <span>Project Buffer:</span>
+                                <span class="text-amber-300 font-bold" x-text="formatCurrency(results().contingencyFee * qty)"></span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="p-3 rounded-xl bg-slate-50 border border-slate-100 cursor-help" title="30.3% Self-Employment & Federal Income Tax Reserve allocated per unit">
-                        <div class="text-[10px] text-sky-600 font-bold uppercase mb-1">Tax (30.3%) ⓘ</div>
+
+                    <!-- Tax Reserve Card -->
+                    <div class="has-tooltip p-3 rounded-xl bg-slate-50 hover:bg-sky-50/50 border border-slate-200 transition cursor-help">
+                        <div class="text-[10px] text-sky-600 font-bold uppercase mb-1 flex justify-between">
+                            <span>Tax (30.3%)</span><span>ⓘ</span>
+                        </div>
                         <div class="text-lg font-black text-sky-600" x-text="'$' + results().unitTaxReserve.toFixed(2)"></div>
+                        <div class="custom-tooltip absolute bottom-full right-0 mb-2 w-64 p-3 bg-slate-900 text-white text-xs rounded-xl shadow-xl">
+                            <div class="font-bold text-sky-300 mb-1">30.3% Tax Reserve</div>
+                            <p class="text-[11px] text-slate-300 leading-relaxed">Held strictly on net operating profit to cover Self-Employment (15.3%) & Federal Income Tax (~15%) for all 4 partners.</p>
+                            <div class="mt-2 pt-2 border-t border-slate-700 flex justify-between font-mono text-[11px]">
+                                <span>Total Tax Held:</span>
+                                <span class="text-sky-300 font-bold" x-text="formatCurrency(results().totalTaxReserve)"></span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="p-3 rounded-xl bg-slate-50 border border-slate-100 cursor-help" title="Final Take-Home Profit per unit after Variable Costs, Fixed Overhead allocation, and 30.3% Tax Reserve">
-                        <div class="text-[10px] text-slate-400 font-bold uppercase mb-1">Take-Home / Unit ⓘ</div>
+
+                    <!-- Take-Home / Unit Card -->
+                    <div class="has-tooltip p-3 rounded-xl bg-slate-50 hover:bg-emerald-50/50 border border-slate-200 transition cursor-help">
+                        <div class="text-[10px] text-slate-500 font-bold uppercase mb-1 flex justify-between">
+                            <span>Take-Home/Unit</span><span class="text-emerald-600">ⓘ</span>
+                        </div>
                         <div class="text-lg font-black" :class="results().unitProfit < 0 ? 'text-rose-600' : 'text-emerald-600'" x-text="'$' + results().unitProfit.toFixed(2)"></div>
+                        <div class="custom-tooltip absolute bottom-full right-0 mb-2 w-64 p-3 bg-slate-900 text-white text-xs rounded-xl shadow-xl">
+                            <div class="font-bold text-emerald-300 mb-1">True Distributable Unit Profit</div>
+                            <p class="text-[11px] text-slate-300 leading-relaxed">Gross Collected minus Variable Costs, Fixed Tooling/Loan share, and the 30.3% Tax Reserve.</p>
+                            <div class="mt-2 pt-2 border-t border-slate-700 flex justify-between font-mono text-[11px]">
+                                <span>Per Partner/Unit:</span>
+                                <span class="text-emerald-300 font-bold" x-text="'$' + (results().unitProfit / 4).toFixed(2)"></span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Variable Cost Distribution Bar & Legend -->
                 <div class="space-y-3">
                     <div class="flex justify-between items-center text-xs font-bold text-slate-600 uppercase">
-                        <span>Variable Cost Distribution (Unit)</span>
+                        <span>Variable Cost Distribution (Hover Bar Slices)</span>
                         <span class="bg-slate-100 px-2.5 py-1 rounded text-slate-700 font-mono" x-text="'Total Variable: $' + results().totalVariableCost.toFixed(2)"></span>
                     </div>
-                    <div class="h-4 w-full bg-slate-100 rounded-full flex overflow-hidden shadow-inner">
-                        <div class="bg-indigo-500 h-full transition-all" :style="'width: ' + (results().unitMfgCost/results().totalVariableCost*100) + '%'"></div>
+                    <div class="h-4 w-full bg-slate-100 rounded-full flex shadow-inner">
+                        <div class="bg-indigo-500 h-full first:rounded-l-full transition-all" :style="'width: ' + (results().unitMfgCost/results().totalVariableCost*100) + '%'"></div>
                         <div class="bg-sky-400 h-full transition-all" :style="'width: ' + (results().freight/results().totalVariableCost*100) + '%'"></div>
                         <div class="bg-orange-400 h-full transition-all" :style="'width: ' + (results().tariffs/results().totalVariableCost*100) + '%'"></div>
                         <div class="bg-emerald-400 h-full transition-all" :style="'width: ' + (results().fulfillment/results().totalVariableCost*100) + '%'"></div>
                         <div class="bg-rose-400 h-full transition-all" :style="'width: ' + (results().ksFee/results().totalVariableCost*100) + '%'"></div>
-                        <div class="bg-amber-400 h-full transition-all" :style="'width: ' + (results().contingencyFee/results().totalVariableCost*100) + '%'"></div>
+                        <div class="bg-amber-400 h-full last:rounded-r-full transition-all" :style="'width: ' + (results().contingencyFee/results().totalVariableCost*100) + '%'"></div>
                     </div>
                     <div class="flex flex-wrap gap-x-6 gap-y-2 pt-1">
                         <div class="flex items-center gap-2">
@@ -799,14 +906,15 @@
 
                     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 space-y-3">
                         <div class="flex justify-between items-center">
-                            <h3 class="text-xs font-bold uppercase tracking-widest text-slate-500">Active Fixed Costs</h3>
+                            <h3 class="text-xs font-bold uppercase tracking-widest text-slate-500">Active Fixed Costs (Hover)</h3>
                             <span class="text-xs font-black text-slate-800" x-text="formatCurrency(results().totalFixed)"></span>
                         </div>
                         <div class="divide-y divide-slate-100 text-xs">
                             <template x-for="f in results().activeFixedBreakdown" :key="f.name">
-                                <div class="py-2 flex justify-between items-center" :title="f.desc">
-                                    <span class="text-slate-600 truncate pr-2" x-text="f.name"></span>
+                                <div class="has-tooltip py-2 flex justify-between items-center cursor-help">
+                                    <span class="text-slate-600 truncate pr-2 underline decoration-dotted decoration-slate-300" x-text="f.name"></span>
                                     <span class="font-mono font-bold text-slate-800" x-text="'$' + f.cost"></span>
+                                    <div class="custom-tooltip absolute bottom-full right-0 mb-1.5 w-60 p-2.5 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl" x-text="f.desc"></div>
                                 </div>
                             </template>
                         </div>
@@ -817,7 +925,7 @@
             <!-- Physical Manifest & 2D Box Footprint + Stacked Side Elevation -->
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                 <div class="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
-                    <h2 class="text-xs font-bold uppercase tracking-widest text-slate-500">Physical Manifest & Geometric Primitives</h2>
+                    <h2 class="text-xs font-bold uppercase tracking-widest text-slate-500">Physical Manifest & Geometric Primitives (Hover Shapes)</h2>
                     <div class="text-[10px] font-bold text-slate-500 uppercase">
                         Stacked Height: <span :class="results().stackedHeight > boxH ? 'text-rose-600' : 'text-emerald-600'" x-text="results().stackedHeight + 'mm'"></span> / <span x-text="boxH + 'mm'"></span>
                     </div>
@@ -868,11 +976,11 @@
                             <!-- Top-Down Footprint -->
                             <div class="flex flex-col items-center">
                                 <div class="text-[10px] font-bold text-slate-400 uppercase mb-2">Top-Down Footprint</div>
-                                <div class="relative border-2 border-slate-400 bg-white shadow-inner overflow-hidden" style="width: 150px; height: 150px;">
+                                <div class="relative border-2 border-slate-400 bg-white shadow-inner" style="width: 150px; height: 150px;">
                                     <template x-for="item in results().manifest" :key="item.name">
-                                        <div x-show="item.l > 0" class="absolute opacity-45 border border-black/20"
-                                             :style="`left: 0; top: 0; width: ${Math.min(100, (item.l / boxL) * 100)}%; height: ${Math.min(100, (item.w / boxW) * 100)}%; background-color: ${item.color};`"
-                                             :title="item.name + ' (' + item.dims + ')'">
+                                        <div x-show="item.l > 0" class="has-tooltip absolute opacity-50 hover:opacity-85 border border-black/30 transition cursor-pointer"
+                                             :style="`left: 0; top: 0; width: ${Math.min(100, (item.l / boxL) * 100)}%; height: ${Math.min(100, (item.w / boxW) * 100)}%; background-color: ${item.color};`">
+                                            <div class="custom-tooltip absolute bottom-full left-0 mb-1 w-44 p-2 bg-slate-900 text-white text-[10px] rounded-lg shadow-lg" x-text="item.name + ' (' + item.dims + ')'"></div>
                                         </div>
                                     </template>
                                 </div>
@@ -882,11 +990,11 @@
                             <!-- Side Stack Depth -->
                             <div class="flex flex-col items-center">
                                 <div class="text-[10px] font-bold text-slate-400 uppercase mb-2">Vertical Stack Depth</div>
-                                <div class="relative border-2 border-slate-400 bg-white shadow-inner flex flex-col-reverse justify-start overflow-hidden" style="width: 80px; height: 150px;">
+                                <div class="relative border-2 border-slate-400 bg-white shadow-inner flex flex-col-reverse justify-start" style="width: 80px; height: 150px;">
                                     <template x-for="item in results().manifest" :key="item.name">
-                                        <div x-show="item.h > 0" class="w-full border-t border-black/20 transition-all"
-                                             :style="`height: ${(item.h / boxH) * 100}%; background-color: ${item.color};`"
-                                             :title="item.name + ' (' + item.h + 'mm tall)'">
+                                        <div x-show="item.h > 0" class="has-tooltip w-full border-t border-black/20 hover:brightness-110 transition-all cursor-pointer"
+                                             :style="`height: ${(item.h / boxH) * 100}%; background-color: ${item.color};`">
+                                            <div class="custom-tooltip absolute bottom-full right-0 mb-1 w-44 p-2 bg-slate-900 text-white text-[10px] rounded-lg shadow-lg" x-text="item.name + ' (' + item.h + 'mm tall)'"></div>
                                         </div>
                                     </template>
                                 </div>

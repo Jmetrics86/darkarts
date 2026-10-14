@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kickstarter Logistics Simulator</title>
+    <title>Dark Arts — Logistics, Box & P&L Simulator</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    
     <style>
         [x-cloak] { display: none !important; }
         input[type=number]::-webkit-inner-spin-button, 
@@ -13,8 +12,7 @@
             -webkit-appearance: none; 
             margin: 0; 
         }
-        /* Custom focus rings for better accessibility */
-        input:focus-visible, button:focus-visible {
+        input:focus-visible, button:focus-visible, select:focus-visible {
             outline: 2px solid #4f46e5;
             outline-offset: 2px;
         }
@@ -23,105 +21,109 @@
     <script>
         function simulator() {
             return {
-                // --- DATA ---
+                // --- PANDA QUOTE SW25080 & QML DATA DICTIONARY ---
                 components: {
                     "Base Game (Cards + Manual)": {
-                        l: 250, w: 250, h: 50, // Effective bounding box for cards/manual/tuckboxes
+                        l: 250, w: 250, h: 50,
                         weightKg: 1.21,
-                        pricing: { 
-                            500: 9.01, 750: 7.23, 1000: 6.37, 1500: 5.52, 
-                            2000: 5.09, 2500: 4.84, 3000: 4.59, 5000: 4.03 
-                        },
+                        pricing: { 500: 9.01, 750: 7.23, 1000: 6.37, 1500: 5.52, 2000: 5.09, 2500: 4.84, 3000: 4.59, 5000: 4.03 },
                         required: true,
-                        color: '#6366f1'
+                        color: '#6366f1',
+                        desc: 'Two-piece box, 135-140 ivorycore 310gsm cards, tuckboxes & booklet (Panda SW25080).'
                     },
                     "Playmat (Rubber)": {
-                        l: 350, w: 60, h: 60, // Rolled cylinder footprint
+                        l: 350, w: 60, h: 60,
                         weightKg: 0.40,
-                        pricing: { 
-                            300: 2.22, 500: 1.89, 1000: 1.64, 
-                            1500: 1.56, 2000: 1.51, 3000: 1.44 
-                        },
+                        pricing: { 300: 2.22, 500: 1.89, 1000: 1.64, 1500: 1.56, 2000: 1.51, 3000: 1.44 },
                         required: false,
-                        color: '#94a3b8'
+                        color: '#64748b',
+                        desc: '600x350mm 2mm natural rubber mat with double-stitched edges (Rolled: 350x60mm).'
                     },
                     "Extra Playmat (Rubber)": {
                         l: 350, w: 60, h: 60,
                         weightKg: 0.40,
-                        pricing: { 
-                            300: 2.22, 500: 1.89, 1000: 1.64, 
-                            1500: 1.56, 2000: 1.51, 3000: 1.44 
-                        },
+                        pricing: { 300: 2.22, 500: 1.89, 1000: 1.64, 1500: 1.56, 2000: 1.51, 3000: 1.44 },
                         required: false,
-                        color: '#cbd5e1'
+                        color: '#94a3b8',
+                        desc: 'Second 600x350mm 2mm natural rubber playmat for 2-player setup.'
                     },
                     "Paper Playmat (Rules Sheet)": {
                         l: 150, w: 100, h: 2,
                         weightKg: 0.045,
-                        pricing: { 
-                            500: 0.25, 750: 0.19, 1000: 0.15, 1500: 0.13, 
-                            2000: 0.09, 2500: 0.11, 3000: 0.09, 5000: 0.08 
-                        },
+                        pricing: { 500: 0.25, 750: 0.19, 1000: 0.15, 1500: 0.13, 2000: 0.09, 2500: 0.11, 3000: 0.09, 5000: 0.08 },
                         required: false,
-                        color: '#818cf8'
+                        color: '#818cf8',
+                        desc: '457x610mm 157gsm gloss paper playmat with rules on back (Folded: 150x100x2mm).'
                     },
                     "Extra Paper Playmat (2nd Player)": {
                         l: 150, w: 100, h: 2,
                         weightKg: 0.045,
-                        pricing: { 
-                            500: 0.25, 750: 0.19, 1000: 0.15, 1500: 0.13, 
-                            2000: 0.09, 2500: 0.11, 3000: 0.09, 5000: 0.08 
-                        },
+                        pricing: { 500: 0.25, 750: 0.19, 1000: 0.15, 1500: 0.13, 2000: 0.09, 2500: 0.11, 3000: 0.09, 5000: 0.08 },
                         required: false,
-                        color: '#a5b4fc'
+                        color: '#a5b4fc',
+                        desc: 'Second folded paper playmat/rules sheet for Player 2.'
                     },
                     "Sleeves (Pack)": {
                         l: 90, w: 65, h: 20,
                         weightKg: 0.20,
-                        pricing: { 
-                            300: 3.57, 500: 3.44, 1000: 3.21, 
-                            1500: 3.18, 2000: 3.16, 3000: 3.02 
-                        },
+                        pricing: { 300: 3.57, 500: 3.44, 1000: 3.21, 1500: 3.18, 2000: 3.16, 3000: 3.02 },
                         required: false,
-                        color: '#38bdf8'
+                        color: '#0ea5e9',
+                        desc: '140 custom 4C printed glossy sleeves (65.5x90.5mm, 0.1mm PP in PE bag).'
                     },
                     "Art Book (Hardcover)": {
                         l: 260, w: 210, h: 5,
                         weightKg: 0.398,
-                        pricing: { 
-                            300: 6.31, 500: 4.00, 1000: 2.45, 
-                            1500: 1.98, 2000: 1.76, 3000: 1.54 
-                        },
+                        pricing: { 300: 6.31, 500: 4.00, 1000: 2.45, 1500: 1.98, 2000: 1.76, 3000: 1.54 },
                         required: false,
-                        color: '#fb923c'
+                        color: '#f97316',
+                        desc: '210x260mm 28-page hardcover artbook, 157gsm matte laminated cover + 2mm greyboard.'
                     },
                     "Tokens (Punchboard)": {
                         l: 300, w: 200, h: 3,
                         weightKg: 0.15,
-                        pricing: { 
-                            500: 1.45, 750: 0.97, 1000: 0.73, 
-                            1500: 0.49, 2500: 0.37, 3000: 0.24, 5000: 0.15 
-                        },
+                        pricing: { 500: 1.45, 750: 0.97, 1000: 0.73, 1500: 0.49, 2000: 0.29, 2500: 0.37, 3000: 0.24, 5000: 0.15 },
                         required: false,
-                        color: '#fbbf24'
+                        color: '#eab308',
+                        desc: '3mm cardboard punchboard tokens (44.5x44.5mm die-cut patterns).'
+                    },
+                    "Cardboard Tray (Insert)": {
+                        l: 340, w: 280, h: 15,
+                        weightKg: 0.12,
+                        pricing: { 500: 0.79, 750: 0.61, 1000: 0.52, 1500: 0.45, 2000: 0.38, 2500: 0.41, 3000: 0.37, 5000: 0.34 },
+                        required: false,
+                        color: '#10b981',
+                        desc: 'Panda OPTION: Tray — 300gsm CCNB + B9 corrugated compartmentalized insert.'
+                    },
+                    "Anti-Scratch Box Lamination": {
+                        l: 0, w: 0, h: 0,
+                        weightKg: 0.00,
+                        pricing: { 500: 0.66, 750: 0.49, 1000: 0.41, 1500: 0.33, 2000: 0.26, 2500: 0.28, 3000: 0.24, 5000: 0.22 },
+                        required: false,
+                        color: '#ec4899',
+                        desc: 'Panda OPTION: Anti-scratch & anti-smudge matte lamination upgrade for dark box art.'
                     }
                 },
+
                 fixedCosts: {
-                    "Safety Testing": 600,
-                    "Base Tooling": 66,
-                    "Token Tooling": 90,
-                    "Sleeve Tooling": 85,
-                    "Playmat Film": 150,
-                    "Loan Repayment": 3300
+                    "Safety Testing (Amazon/Retail)": { cost: 600, desc: "Third-party compliance testing (mandatory for Amazon/Retail; 14+ age rating is exempt)." },
+                    "Base Tooling": { cost: 66, desc: "Panda base game plate & mold charges (SW25080)." },
+                    "Token Tooling": { cost: 90, desc: "Custom die-cut blade template for 3mm cardboard punchboard tokens." },
+                    "Sleeve Tooling": { cost: 85, desc: "Setup and plate tooling for custom 4C printed card sleeves." },
+                    "Playmat Film": { cost: 150, desc: "One-time film charge required for printing on non-paper rubber playmats." },
+                    "Loan Repayment": { cost: 3300, desc: "Pre-launch seed loan repayment." }
                 },
 
-                // --- STATE ---
+                // --- DEFAULT STATE (Matches Reference Image) ---
                 boxL: 356,
                 boxW: 356,
                 boxH: 153,
                 qty: 1500,
                 pledgePrice: 59.99,
                 shippingCharge: 20,
+                packedInsideBox: true, // true = Master SKU (1 pick), false = Loose SKUs (QML pick fees apply >3 items)
+                includeSafetyTesting: true,
+                includeStretchGoalTooling: false, // $580 total ($186 Coins + $208 Pins + $186 Stickers)
                 selectedItems: [
                     "Base Game (Cards + Manual)", 
                     "Paper Playmat (Rules Sheet)", 
@@ -129,8 +131,46 @@
                     "Art Book (Hardcover)", 
                     "Tokens (Punchboard)"
                 ],
+                copyStatus: '',
 
-                // --- METHODS ---
+                init() {
+                    // Load state from URL parameters if shared by a teammate
+                    const params = new URLSearchParams(window.location.search);
+                    if (params.has('l')) this.boxL = Number(params.get('l'));
+                    if (params.has('w')) this.boxW = Number(params.get('w'));
+                    if (params.has('h')) this.boxH = Number(params.get('h'));
+                    if (params.has('qty')) this.qty = Number(params.get('qty'));
+                    if (params.has('pledge')) this.pledgePrice = Number(params.get('pledge'));
+                    if (params.has('ship')) this.shippingCharge = Number(params.get('ship'));
+                    if (params.has('pack')) this.packedInsideBox = params.get('pack') === '1';
+                    if (params.has('safe')) this.includeSafetyTesting = params.get('safe') === '1';
+                    if (params.has('sg')) this.includeStretchGoalTooling = params.get('sg') === '1';
+                    if (params.has('items')) {
+                        const decoded = decodeURIComponent(params.get('items')).split('|').filter(Boolean);
+                        if (decoded.length > 0) this.selectedItems = decoded;
+                    }
+                },
+
+                applyPreset(preset) {
+                    if (preset === 'default') {
+                        this.boxL = 356; this.boxW = 356; this.boxH = 153;
+                        this.qty = 1500; this.pledgePrice = 59.99; this.shippingCharge = 20;
+                        this.selectedItems = ["Base Game (Cards + Manual)", "Paper Playmat (Rules Sheet)", "Extra Paper Playmat (2nd Player)", "Art Book (Hardcover)", "Tokens (Punchboard)"];
+                    } else if (preset === 'acolyte') {
+                        this.boxL = 365; this.boxW = 300; this.boxH = 98;
+                        this.qty = 1500; this.pledgePrice = 35.00; this.shippingCharge = 20;
+                        this.selectedItems = ["Base Game (Cards + Manual)"];
+                    } else if (preset === 'warlock') {
+                        this.boxL = 365; this.boxW = 300; this.boxH = 98;
+                        this.qty = 1500; this.pledgePrice = 55.00; this.shippingCharge = 20;
+                        this.selectedItems = ["Base Game (Cards + Manual)", "Playmat (Rubber)", "Sleeves (Pack)"];
+                    } else if (preset === 'archmage') {
+                        this.boxL = 365; this.boxW = 300; this.boxH = 98;
+                        this.qty = 1500; this.pledgePrice = 89.00; this.shippingCharge = 20;
+                        this.selectedItems = ["Base Game (Cards + Manual)", "Playmat (Rubber)", "Sleeves (Pack)", "Art Book (Hardcover)", "Tokens (Punchboard)"];
+                    }
+                },
+
                 toggleItem(name) {
                     if (this.components[name].required) return;
                     if (this.selectedItems.includes(name)) {
@@ -144,6 +184,105 @@
                     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
                 },
 
+                copyShareLink() {
+                    const params = new URLSearchParams();
+                    params.set('l', this.boxL);
+                    params.set('w', this.boxW);
+                    params.set('h', this.boxH);
+                    params.set('qty', this.qty);
+                    params.set('pledge', this.pledgePrice);
+                    params.set('ship', this.shippingCharge);
+                    params.set('pack', this.packedInsideBox ? '1' : '0');
+                    params.set('safe', this.includeSafetyTesting ? '1' : '0');
+                    params.set('sg', this.includeStretchGoalTooling ? '1' : '0');
+                    params.set('items', encodeURIComponent(this.selectedItems.join('|')));
+                    const url = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+                    navigator.clipboard.writeText(url);
+                    this.copyStatus = 'Link Copied!';
+                    setTimeout(() => this.copyStatus = '', 2500);
+                },
+
+                copyExecutiveSummary() {
+                    const r = this.results();
+                    const text = [
+                        `=== DARK ARTS LOGISTICS & PROFIT BRIEFING ===`,
+                        `Box Dimensions: ${this.boxL}x${this.boxW}x${this.boxH}mm (${r.capPercent}% Vol Used | Stacked: ${r.stackedHeight}mm)`,
+                        `Production Run: ${this.qty.toLocaleString()} units | Pledge: $${this.pledgePrice.toFixed(2)} + $${this.shippingCharge.toFixed(2)} Ship`,
+                        `Components (${this.selectedItems.length}): ${this.selectedItems.join(', ')}`,
+                        `--- UNIT ECONOMICS ---`,
+                        `Gross Collected/Unit: $${r.grossUnitRev.toFixed(2)}`,
+                        `Mfg (EXW Panda): -$${r.unitMfgCost.toFixed(2)}`,
+                        `Ocean Freight (30%) & Tariffs (20%): -$${(r.freight + r.tariffs).toFixed(2)} (Landed: $${r.landedCost.toFixed(2)})`,
+                        `QML Fulfillment (Base + Fuel + Picks): -$${r.fulfillment.toFixed(2)} (Subsidy: $${r.subsidy.toFixed(2)})`,
+                        `KS & Stripe Fees (10%): -$${r.ksFee.toFixed(2)}`,
+                        `Contingency Reserve (15%): -$${r.contingencyFee.toFixed(2)}`,
+                        `Tax Reserve (30.3%): -$${r.unitTaxReserve.toFixed(2)}`,
+                        `FINAL TAKE-HOME NET / UNIT: $${r.unitProfit.toFixed(2)}`,
+                        `--- PROJECT TOTALS ---`,
+                        `Gross Project Revenue: ${this.formatCurrency(r.grossProjectRev)}`,
+                        `Total Fixed Tooling & Overhead: ${this.formatCurrency(r.totalFixed)}`,
+                        `Total Tax Reserve (30.3%): ${this.formatCurrency(r.totalTaxReserve)}`,
+                        `FINAL TAKE-HOME PROFIT: ${this.formatCurrency(r.netProjectProfit)} (${this.formatCurrency(r.partnerSplit)} per partner across 4 partners)`
+                    ].join('\n');
+                    navigator.clipboard.writeText(text);
+                    this.copyStatus = 'Summary Copied!';
+                    setTimeout(() => this.copyStatus = '', 2500);
+                },
+
+                exportFinancialCSV() {
+                    const r = this.results();
+                    const rows = [
+                        ["Category", "Line Item", "Formula / Basis", "Per Unit (USD)", "Project Total (USD)", "% of Gross Revenue"],
+                        ["Revenue", "Base Pledge Price", "User Input", this.pledgePrice.toFixed(2), (this.pledgePrice * this.qty).toFixed(2), ((this.pledgePrice / r.grossUnitRev) * 100).toFixed(1) + "%"],
+                        ["Revenue", "Shipping Collected", "User Input", this.shippingCharge.toFixed(2), (this.shippingCharge * this.qty).toFixed(2), ((this.shippingCharge / r.grossUnitRev) * 100).toFixed(1) + "%"],
+                        ["Revenue", "GROSS REVENUE", "Pledge + Shipping", r.grossUnitRev.toFixed(2), r.grossProjectRev.toFixed(2), "100.0%"],
+                        ["COGS & Landed", "Panda Manufacturing (EXW)", "Tiered Lookup (" + this.qty + " units)", (-r.unitMfgCost).toFixed(2), (-r.unitMfgCost * this.qty).toFixed(2), ((r.unitMfgCost / r.grossUnitRev) * 100).toFixed(1) + "%"],
+                        ["COGS & Landed", "Inbound Ocean Freight (LCL)", "30% of Mfg Cost", (-r.freight).toFixed(2), (-r.freight * this.qty).toFixed(2), ((r.freight / r.grossUnitRev) * 100).toFixed(1) + "%"],
+                        ["COGS & Landed", "US Customs Tariffs", "20% of Mfg Cost", (-r.tariffs).toFixed(2), (-r.tariffs * this.qty).toFixed(2), ((r.tariffs / r.grossUnitRev) * 100).toFixed(1) + "%"],
+                        ["Fulfillment", "QML US Base + Fuel + Pick Fees", "$21.96 Base + $1.92 Fuel + $" + r.extraPickFee.toFixed(2) + " Picks", (-r.fulfillment).toFixed(2), (-r.fulfillment * this.qty).toFixed(2), ((r.fulfillment / r.grossUnitRev) * 100).toFixed(1) + "%"],
+                        ["Platform & Buffer", "Kickstarter & Payment Fees", "10% of Gross Revenue", (-r.ksFee).toFixed(2), (-r.ksFee * this.qty).toFixed(2), "10.0%"],
+                        ["Platform & Buffer", "Contingency Fee", "15% of (Landed + Fulfillment)", (-r.contingencyFee).toFixed(2), (-r.contingencyFee * this.qty).toFixed(2), ((r.contingencyFee / r.grossUnitRev) * 100).toFixed(1) + "%"],
+                        ["Pre-Tax Margin", "Contribution Margin (Before Fixed & Tax)", "Gross Rev - Variable Costs", r.unitProfitPreTax.toFixed(2), (r.unitProfitPreTax * this.qty).toFixed(2), ((r.unitProfitPreTax / r.grossUnitRev) * 100).toFixed(1) + "%"],
+                        ["Fixed Overhead", "One-Time Tooling, Testing & Loan", "Allocated across " + this.qty + " units", (-r.totalFixed / this.qty).toFixed(2), (-r.totalFixed).toFixed(2), ((r.totalFixed / r.grossProjectRev) * 100).toFixed(1) + "%"],
+                        ["Net Pre-Tax", "Operating Profit (Pre-Tax)", "Contribution - Fixed Costs", (r.projectNetPreTax / this.qty).toFixed(2), r.projectNetPreTax.toFixed(2), ((r.projectNetPreTax / r.grossProjectRev) * 100).toFixed(1) + "%"],
+                        ["Tax Reserve", "Self-Employment & Federal Tax Reserve", "30.3% of Operating Profit", (-r.unitTaxReserve).toFixed(2), (-r.totalTaxReserve).toFixed(2), ((r.totalTaxReserve / r.grossProjectRev) * 100).toFixed(1) + "%"],
+                        ["Bottom Line", "FINAL TAKE-HOME NET PROFIT", "Post-Tax Distributable Profit", r.unitProfit.toFixed(2), r.netProjectProfit.toFixed(2), ((r.netProjectProfit / r.grossProjectRev) * 100).toFixed(1) + "%"],
+                        ["Partner Split", "Per-Partner Distribution (4 Partners)", "25% Share of Take-Home Net", (r.unitProfit / 4).toFixed(2), r.partnerSplit.toFixed(2), ((r.partnerSplit / r.grossProjectRev) * 100).toFixed(1) + "%"]
+                    ];
+                    this.downloadCSV(rows, `dark_arts_pnl_${this.qty}_units.csv`);
+                },
+
+                exportManifestCSV() {
+                    const r = this.results();
+                    const rows = [
+                        ["Component Name", "Dimensions (mm)", "Weight (kg)", "Weight (lbs)", "Active Tier Achieved", "Unit Mfg Price (USD)", "Project Mfg Total (USD)", "Box Footprint Fit"],
+                        ...r.manifest.map(item => [
+                            item.name,
+                            item.dims,
+                            item.weightKg.toFixed(3),
+                            (item.weightKg * 2.20462).toFixed(3),
+                            item.tier + "+ units",
+                            item.price.toFixed(2),
+                            (item.price * this.qty).toFixed(2),
+                            item.fits ? "PASS" : "FAIL"
+                        ]),
+                        ["TOTAL PACKAGE", `Stacked Height: ${r.stackedHeight}mm (Box Max: ${this.boxH}mm)`, r.totalWeightKg.toFixed(3), r.totalWeightLbs.toFixed(2), `${this.qty} Units`, r.unitMfgCost.toFixed(2), (r.unitMfgCost * this.qty).toFixed(2), r.isOverfilled ? "OVERFLOW" : "PASS"]
+                    ];
+                    this.downloadCSV(rows, `dark_arts_manifest_${this.boxL}x${this.boxW}x${this.boxH}.csv`);
+                },
+
+                downloadCSV(rows, filename) {
+                    const csvContent = "data:text/csv;charset=utf-8," 
+                        + rows.map(e => e.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(",")).join("\n");
+                    const encodedUri = encodeURI(csvContent);
+                    const link = document.createElement("a");
+                    link.setAttribute("href", encodedUri);
+                    link.setAttribute("download", filename);
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                },
+
                 results() {
                     let totalCompVolume = 0;
                     let totalWeightKg = 0;
@@ -154,28 +293,14 @@
 
                     this.selectedItems.forEach(itemKey => {
                         const data = this.components[itemKey];
+                        if (!data) return;
                         totalWeightKg += data.weightKg;
                         stackedHeight += data.h;
                         totalCompVolume += (data.l * data.w * data.h);
 
-                        // Fit check logic
                         const fitsNormally = data.l <= this.boxL && data.w <= this.boxW;
                         const fitsRotated = data.w <= this.boxL && data.l <= this.boxW;
                         const individualFit = fitsNormally || fitsRotated;
-
-                        manifest.push({
-                            name: itemKey,
-                            dims: `${data.l}x${data.w}x${data.h}mm`,
-                            weight: `${data.weightKg.toFixed(3)}kg`,
-                            fits: individualFit,
-                            color: data.color,
-                            l: data.l,
-                            w: data.w
-                        });
-
-                        if (!individualFit) {
-                            warnings.push(`${itemKey} is physically too large for the box footprint.`);
-                        }
 
                         // Pricing Tier Lookup
                         const pricing = data.pricing;
@@ -185,325 +310,616 @@
                             if (this.qty >= t) bestTier = t;
                         }
                         const price = pricing[bestTier];
+
+                        manifest.push({
+                            name: itemKey,
+                            dims: data.l > 0 ? `${data.l}x${data.w}x${data.h}mm` : 'Surface Finish',
+                            weight: `${data.weightKg.toFixed(3)}kg`,
+                            weightKg: data.weightKg,
+                            fits: individualFit,
+                            color: data.color,
+                            l: data.l,
+                            w: data.w,
+                            h: data.h,
+                            tier: bestTier,
+                            price: price
+                        });
+
+                        if (!individualFit && data.l > 0) {
+                            warnings.push(`${itemKey} (${data.l}x${data.w}mm) exceeds the box footprint (${this.boxL}x${this.boxW}mm) and requires folding or resizing.`);
+                        }
+
                         tiersAchieved.push({ name: itemKey, tier: bestTier, price: price });
                     });
 
-                    // Calculated Financials
+                    // Unit Financials
                     const unitMfgCost = tiersAchieved.reduce((sum, t) => sum + t.price, 0);
                     const freight = unitMfgCost * 0.30;
                     const tariffs = unitMfgCost * 0.20;
                     const landedCost = unitMfgCost + freight + tariffs;
-                    const fulfillmentTotal = 21.96 + 1.92;
-                    const ksFee = (this.pledgePrice + this.shippingCharge) * 0.10;
+                    
+                    // QML Pick & Pack Logic (First 3 SKUs free, 4+ is $0.25 each if shipped loose)
+                    const physicalSkuCount = this.selectedItems.filter(i => this.components[i]?.l > 0).length;
+                    const effectiveSkus = this.packedInsideBox ? 1 : physicalSkuCount;
+                    const extraPickFee = effectiveSkus > 3 ? (effectiveSkus - 3) * 0.25 : 0;
+                    const fulfillmentTotal = 21.96 + 1.92 + extraPickFee;
+
+                    const grossUnitRev = this.pledgePrice + this.shippingCharge;
+                    const grossProjectRev = grossUnitRev * this.qty;
+                    const ksFee = grossUnitRev * 0.10;
                     const contingencyFee = (landedCost + fulfillmentTotal) * 0.15;
                     const totalVariableCost = landedCost + fulfillmentTotal + ksFee + contingencyFee;
                     
-                    // Net before tax
-                    const unitProfitPreTax = (this.pledgePrice + this.shippingCharge) - totalVariableCost;
-                    const totalFixed = 4056;
+                    // Fixed Costs Calculation (Dynamic based on active components & toggles)
+                    let totalFixed = 0;
+                    let activeFixedBreakdown = [];
+                    Object.entries(this.fixedCosts).forEach(([key, obj]) => {
+                        if (key.includes("Safety") && !this.includeSafetyTesting) return;
+                        if (key.includes("Token") && !this.selectedItems.includes("Tokens (Punchboard)")) return;
+                        if (key.includes("Sleeve") && !this.selectedItems.includes("Sleeves (Pack)")) return;
+                        if (key.includes("Playmat") && !this.selectedItems.includes("Playmat (Rubber)") && !this.selectedItems.includes("Extra Playmat (Rubber)")) return;
+                        totalFixed += obj.cost;
+                        activeFixedBreakdown.push({ name: key, cost: obj.cost, desc: obj.desc });
+                    });
+
+                    if (this.includeStretchGoalTooling) {
+                        totalFixed += 580; // $186 Coins + $208 Pins + $186 Stickers
+                        activeFixedBreakdown.push({ name: "Stretch Goal 1 Tooling (Coins, Pins, Stickers)", cost: 580, desc: "Coins ($186) + Pins ($208) + Stickers ($186) per Launch Plan V11." });
+                    }
+
+                    // Pre-Tax & Post-Tax Profit
+                    const unitProfitPreTax = grossUnitRev - totalVariableCost;
                     const projectNetPreTax = (unitProfitPreTax * this.qty) - totalFixed;
 
-                    // Tax Reserve Logic (30.3% of profit)
                     const taxRate = 0.303;
                     const totalTaxReserve = projectNetPreTax > 0 ? projectNetPreTax * taxRate : 0;
                     const finalNetProjectProfit = projectNetPreTax - totalTaxReserve;
-                    
-                    // Effective Unit Tax (Spread across units for reporting)
                     const unitTaxReserve = projectNetPreTax > 0 ? (totalTaxReserve / this.qty) : 0;
-                    const unitProfitFinal = unitProfitPreTax - unitTaxReserve;
+                    const unitProfitFinal = unitProfitPreTax - (totalFixed / this.qty) - unitTaxReserve;
 
+                    // Spatial Volume Checks
                     const boxVolume = Math.max(1, this.boxL * this.boxW * this.boxH);
                     const efficiencyThreshold = boxVolume * 0.85;
-                    
                     if (stackedHeight > this.boxH) {
-                        warnings.push(`Warning: Combined stacked height (${stackedHeight}mm) exceeds box height (${this.boxH}mm).`);
+                        warnings.push(`Combined stacked height (${stackedHeight}mm) exceeds box height (${this.boxH}mm).`);
                     }
+
+                    // Cash Flow Milestones (Panda 50% deposit + 100% tooling)
+                    const totalMfgRun = unitMfgCost * this.qty;
+                    const toolingOnly = totalFixed - 3300; // Exclude loan repayment from Panda invoice
+                    const depositAtSigning = (totalMfgRun * 0.50) + Math.max(0, toolingOnly);
+                    const dueAtMPC = (totalMfgRun * 0.50) + ((freight + tariffs) * this.qty);
+                    const breakEvenUnits = unitProfitPreTax > 0 ? Math.ceil(totalFixed / unitProfitPreTax) : 'N/A';
 
                     return {
                         isOverfilled: totalCompVolume > efficiencyThreshold || stackedHeight > this.boxH,
                         warnings,
                         capPercent: ((totalCompVolume / boxVolume) * 100).toFixed(1),
-                        unitMfgCost, landedCost, unitProfit: unitProfitFinal,
-                        totalVariableCost, freight, tariffs, fulfillment: fulfillmentTotal, ksFee, contingencyFee,
+                        grossUnitRev, grossProjectRev,
+                        unitMfgCost, landedCost,
+                        unitProfitPreTax,
+                        unitProfit: unitProfitFinal,
+                        totalVariableCost, freight, tariffs,
+                        fulfillment: fulfillmentTotal, extraPickFee, effectiveSkus,
+                        ksFee, contingencyFee,
                         unitTaxReserve,
+                        projectNetPreTax,
                         netProjectProfit: finalNetProjectProfit,
-                        totalFixed,
+                        partnerSplit: finalNetProjectProfit / 4,
+                        totalFixed, activeFixedBreakdown,
                         totalTaxReserve,
                         tiersAchieved, manifest, stackedHeight,
                         totalWeightLbs: totalWeightKg * 2.20462,
                         totalWeightKg,
-                        subsidy: fulfillmentTotal - this.shippingCharge
+                        subsidy: fulfillmentTotal - this.shippingCharge,
+                        depositAtSigning, dueAtMPC, breakEvenUnits
                     };
                 }
             };
         }
     </script>
-
-    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 <body class="bg-slate-50 text-slate-900 font-sans p-4 md:p-8">
 
-<div x-data="simulator()" x-cloak class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
-    
-    <!-- Sidebar -->
-    <aside class="lg:col-span-3 space-y-6">
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-6">
-            <h1 class="text-xl font-bold flex items-center gap-2 text-indigo-600">
+<div x-data="simulator()" x-cloak class="max-w-7xl mx-auto space-y-6">
+
+    <!-- Top Action & Tier Preset Bar -->
+    <header class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+            <div class="p-2.5 bg-indigo-600 text-white rounded-xl shadow-sm">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
-                Project Simulator
-            </h1>
+            </div>
+            <div>
+                <h1 class="text-lg font-black tracking-tight text-slate-900">Dark Arts — Operations & P&L Simulator</h1>
+                <p class="text-xs text-slate-500">Panda Quote SW25080 • QML US Fulfillment • 30.3% Tax Reserve</p>
+            </div>
+        </div>
 
-            <section class="space-y-4">
-                <h2 class="text-[11px] font-bold uppercase tracking-widest text-slate-400">Box Dimensions (mm)</h2>
-                <div class="grid grid-cols-3 gap-2">
-                    <div>
-                        <label class="text-[10px] text-slate-500 block mb-1">Length</label>
-                        <input type="number" x-model.number="boxL" class="w-full p-2 border rounded-lg text-sm bg-slate-50 focus:ring-2 focus:ring-indigo-500 outline-none">
-                    </div>
-                    <div>
-                        <label class="text-[10px] text-slate-500 block mb-1">Width</label>
-                        <input type="number" x-model.number="boxW" class="w-full p-2 border rounded-lg text-sm bg-slate-50 focus:ring-2 focus:ring-indigo-500 outline-none">
-                    </div>
-                    <div>
-                        <label class="text-[10px] text-slate-500 block mb-1">Height</label>
-                        <input type="number" x-model.number="boxH" class="w-full p-2 border rounded-lg text-sm bg-slate-50 focus:ring-2 focus:ring-indigo-500 outline-none">
-                    </div>
-                </div>
-            </section>
+        <!-- Tier Presets -->
+        <div class="flex flex-wrap items-center gap-1.5 bg-slate-100 p-1.5 rounded-xl">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-2">Presets:</span>
+            <button @click="applyPreset('default')" class="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-white text-slate-700 shadow-sm hover:bg-indigo-50 hover:text-indigo-600 transition">Paper Mat Config ($59.99)</button>
+            <button @click="applyPreset('acolyte')" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:bg-white transition">Acolyte ($35)</button>
+            <button @click="applyPreset('warlock')" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:bg-white transition">Warlock ($55)</button>
+            <button @click="applyPreset('archmage')" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:bg-white transition">Archmage ($89)</button>
+        </div>
 
-            <section class="space-y-4">
-                <h2 class="text-[11px] font-bold uppercase tracking-widest text-slate-400">Campaign Stats</h2>
-                <div class="space-y-3">
-                    <div>
-                        <label class="text-[10px] text-slate-500 block mb-1">Production Volume</label>
-                        <input type="number" step="100" x-model.number="qty" class="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+        <!-- Export & Share Actions -->
+        <div class="flex flex-wrap items-center gap-2">
+            <span x-show="copyStatus" x-text="copyStatus" class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200"></span>
+            <button @click="copyShareLink()" class="px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 flex items-center gap-1.5 shadow-sm transition" title="Copy URL with your exact current settings for teammates">
+                <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+                Share Link
+            </button>
+            <button @click="copyExecutiveSummary()" class="px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 flex items-center gap-1.5 shadow-sm transition" title="Copy formatted text summary for Discord or Email">
+                <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+                Copy Summary
+            </button>
+            <button @click="exportFinancialCSV()" class="px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-xs font-bold text-white flex items-center gap-1.5 shadow-sm transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                Export P&L (.CSV)
+            </button>
+            <button @click="exportManifestCSV()" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-xs font-bold text-white flex items-center gap-1.5 shadow-sm transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                Manifest (.CSV)
+            </button>
+        </div>
+    </header>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <!-- Sidebar Controls -->
+        <aside class="lg:col-span-3 space-y-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-6">
+                
+                <!-- Box Dimensions -->
+                <section class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-[11px] font-bold uppercase tracking-widest text-slate-400">Box Dimensions (mm)</h2>
+                        <span class="text-[10px] text-slate-400" title="Panda Quote default is 365x300x98mm; 85% max packing efficiency applied.">ⓘ 85% Air Buffer</span>
                     </div>
-                    <div class="grid grid-cols-2 gap-2">
+                    <div class="grid grid-cols-3 gap-2">
                         <div>
-                            <label class="text-[10px] text-slate-500 block mb-1">Pledge $</label>
-                            <input type="number" step="0.01" x-model.number="pledgePrice" class="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                            <label class="text-[10px] text-slate-500 block mb-1">Length</label>
+                            <input type="number" x-model.number="boxL" class="w-full p-2 border rounded-lg text-sm bg-slate-50 font-semibold">
                         </div>
                         <div>
-                            <label class="text-[10px] text-slate-500 block mb-1">Shipping $</label>
-                            <input type="number" x-model.number="shippingCharge" class="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                            <label class="text-[10px] text-slate-500 block mb-1">Width</label>
+                            <input type="number" x-model.number="boxW" class="w-full p-2 border rounded-lg text-sm bg-slate-50 font-semibold">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-slate-500 block mb-1">Height</label>
+                            <input type="number" x-model.number="boxH" class="w-full p-2 border rounded-lg text-sm bg-slate-50 font-semibold">
                         </div>
                     </div>
-                </div>
-            </section>
+                </section>
 
-            <section class="space-y-2">
-                <h2 class="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-4">Include Components</h2>
-                <template x-for="(data, name) in components" :key="name">
-                    <button @click="toggleItem(name)" :disabled="data.required"
-                        :class="selectedItems.includes(name) ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-slate-200 bg-white'"
-                        class="w-full flex items-center justify-between p-3 rounded-xl border text-left text-sm transition-all focus:ring-2 focus:ring-indigo-500 outline-none">
-                        <span class="flex items-center gap-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V7M4 7c0-1.1.9-2 2-2h12c1.1 0 2 .9 2 2M4 7l8-4 8 4M12 3v18" /></svg>
-                            <span x-text="name"></span>
+                <!-- Campaign Stats -->
+                <section class="space-y-3">
+                    <h2 class="text-[11px] font-bold uppercase tracking-widest text-slate-400">Campaign Stats</h2>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="text-[10px] text-slate-500 block mb-1">Production Volume (MOQ 1,500)</label>
+                            <input type="number" step="100" x-model.number="qty" class="w-full p-2 border rounded-lg text-sm font-semibold">
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="text-[10px] text-slate-500 block mb-1">Pledge ($)</label>
+                                <input type="number" step="0.01" x-model.number="pledgePrice" class="w-full p-2 border rounded-lg text-sm font-semibold">
+                            </div>
+                            <div>
+                                <label class="text-[10px] text-slate-500 block mb-1">Shipping ($)</label>
+                                <input type="number" step="0.50" x-model.number="shippingCharge" class="w-full p-2 border rounded-lg text-sm font-semibold">
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Operational & Overhead Toggles -->
+                <section class="space-y-2.5 pt-2 border-t border-slate-100">
+                    <h2 class="text-[11px] font-bold uppercase tracking-widest text-slate-400">Logistics & Compliance</h2>
+                    
+                    <label class="flex items-start gap-2.5 text-xs text-slate-700 cursor-pointer">
+                        <input type="checkbox" x-model="packedInsideBox" class="mt-0.5 rounded text-indigo-600">
+                        <span>
+                            <strong class="block text-slate-800">Pre-Pack in Master Box (1 SKU)</strong>
+                            <span class="text-[10px] text-slate-400">Uncheck if QML picks add-ons loose ($0.25/pick for SKU 4+).</span>
                         </span>
-                        <template x-if="selectedItems.includes(name)">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
-                        </template>
-                    </button>
-                </template>
-            </section>
-        </div>
-    </aside>
+                    </label>
 
-    <!-- Main Dashboard -->
-    <main class="lg:col-span-9 space-y-6">
-        
-        <!-- Top Status -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div :class="results().isOverfilled ? 'bg-red-50 border-red-200' : 'bg-emerald-50 border-emerald-100'" class="p-6 rounded-2xl shadow-sm border-2">
-                <span :class="results().isOverfilled ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'" class="text-[10px] font-bold px-2 py-1 rounded-full uppercase">Spatial Status</span>
-                <h3 class="text-xl font-black mt-2" x-text="results().isOverfilled ? 'Box Overflow' : 'Fits Comfortably'"></h3>
-                <p class="text-xs text-slate-500 mt-1">Volume used: <span class="font-bold text-slate-900" x-text="results().capPercent + '%'"></span></p>
-            </div>
-            <div :class="results().netProjectProfit < 0 ? 'bg-rose-50 border-rose-200' : 'bg-indigo-50 border-indigo-100'" class="p-6 rounded-2xl shadow-sm border-2">
-                <span :class="results().netProjectProfit < 0 ? 'bg-rose-100 text-rose-700' : 'bg-indigo-100 text-indigo-700'" class="text-[10px] font-bold px-2 py-1 rounded-full uppercase">Take-Home Profitability</span>
-                <h3 class="text-xl font-black mt-2" x-text="results().netProjectProfit < 0 ? 'Financial Risk' : 'Target Profit Met'"></h3>
-                <p class="text-xs text-slate-500 mt-1">Take-Home Net: <span class="font-bold text-slate-900" x-text="formatCurrency(results().netProjectProfit)"></span></p>
-            </div>
-        </div>
+                    <label class="flex items-start gap-2.5 text-xs text-slate-700 cursor-pointer">
+                        <input type="checkbox" x-model="includeSafetyTesting" class="mt-0.5 rounded text-indigo-600">
+                        <span>
+                            <strong class="block text-slate-800">Safety Testing ($600 Fixed)</strong>
+                            <span class="text-[10px] text-slate-400">Required for Amazon/Retail; 14+ age rating is exempt.</span>
+                        </span>
+                    </label>
 
-        <!-- Breakdown -->
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-8">
-            <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
-                <template x-for="stat in [
-                    ['Unit Mfg', '$' + results().unitMfgCost.toFixed(2)],
-                    ['Landed Cost', '$' + results().landedCost.toFixed(2)],
-                    ['KS Fee', '$' + results().ksFee.toFixed(2), 'text-rose-500'],
-                    ['Contingency', '$' + results().contingencyFee.toFixed(2), 'text-amber-600'],
-                    ['Tax Reserve', '$' + results().unitTaxReserve.toFixed(2), 'text-sky-600'],
-                    ['Net / Unit', '$' + results().unitProfit.toFixed(2), results().unitProfit < 0 ? 'text-rose-600' : 'text-emerald-600']
-                ]">
-                    <div>
-                        <div class="text-[10px] text-slate-400 font-bold uppercase mb-1 truncate" x-text="stat[0]"></div>
-                        <div class="text-lg font-black" :class="stat[2]" x-text="stat[1]"></div>
-                    </div>
-                </template>
-            </div>
+                    <label class="flex items-start gap-2.5 text-xs text-slate-700 cursor-pointer">
+                        <input type="checkbox" x-model="includeStretchGoalTooling" class="mt-0.5 rounded text-indigo-600">
+                        <span>
+                            <strong class="block text-slate-800">Stretch Goal 1 Tooling ($580)</strong>
+                            <span class="text-[10px] text-slate-400">Unlocks Coins ($186), Pins ($208) & Stickers ($186).</span>
+                        </span>
+                    </label>
+                </section>
 
-            <div class="space-y-4">
-                <div class="flex justify-between items-center text-xs font-bold text-slate-600 uppercase">
-                    <span>Variable Cost Distribution (Unit)</span>
-                    <span class="bg-slate-100 px-2 py-0.5 rounded text-slate-500 font-mono" x-text="'Total Mfg & Logistics: $' + results().totalVariableCost.toFixed(2)"></span>
+                <!-- Components Selector -->
+                <section class="space-y-2 pt-2 border-t border-slate-100">
+                    <h2 class="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-2">Include Components</h2>
+                    <template x-for="(data, name) in components" :key="name">
+                        <button @click="toggleItem(name)" :disabled="data.required"
+                            :title="data.desc"
+                            :class="selectedItems.includes(name) ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-slate-200 bg-white hover:border-slate-300'"
+                            class="w-full flex items-center justify-between p-2.5 rounded-xl border text-left text-xs font-medium transition-all">
+                            <span class="flex items-center gap-2 truncate">
+                                <span class="w-2.5 h-2.5 rounded-full shrink-0" :style="'background-color: ' + data.color"></span>
+                                <span class="truncate" x-text="name"></span>
+                            </span>
+                            <template x-if="selectedItems.includes(name)">
+                                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                            </template>
+                        </button>
+                    </template>
+                </section>
+            </div>
+        </aside>
+
+        <!-- Main Dashboard -->
+        <main class="lg:col-span-9 space-y-6">
+            
+            <!-- Top Traffic Light Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div :class="results().isOverfilled ? 'bg-red-50 border-red-200' : 'bg-emerald-50 border-emerald-200'" class="p-5 rounded-2xl shadow-sm border-2">
+                    <span :class="results().isOverfilled ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'" class="text-[10px] font-bold px-2 py-1 rounded-full uppercase">Spatial Status</span>
+                    <h3 class="text-xl font-black mt-2" x-text="results().isOverfilled ? 'Box Overflow' : 'Fits Comfortably'"></h3>
+                    <p class="text-xs text-slate-600 mt-1">
+                        Vol: <strong x-text="results().capPercent + '%'"></strong> | Stack: <strong x-text="results().stackedHeight + ' / ' + boxH + 'mm'"></strong>
+                    </p>
                 </div>
-                <div class="h-4 w-full bg-slate-100 rounded-full flex overflow-hidden shadow-inner">
-                    <div class="bg-indigo-500 h-full transition-all" :style="'width: ' + (results().unitMfgCost/results().totalVariableCost*100) + '%'"></div>
-                    <div class="bg-sky-400 h-full transition-all" :style="'width: ' + (results().freight/results().totalVariableCost*100) + '%'"></div>
-                    <div class="bg-orange-400 h-full transition-all" :style="'width: ' + (results().tariffs/results().totalVariableCost*100) + '%'"></div>
-                    <div class="bg-emerald-400 h-full transition-all" :style="'width: ' + (results().fulfillment/results().totalVariableCost*100) + '%'"></div>
-                    <div class="bg-rose-400 h-full transition-all" :style="'width: ' + (results().ksFee/results().totalVariableCost*100) + '%'"></div>
-                    <div class="bg-amber-400 h-full transition-all" :style="'width: ' + (results().contingencyFee/results().totalVariableCost*100) + '%'"></div>
+
+                <div :class="results().netProjectProfit < 0 ? 'bg-rose-50 border-rose-200' : 'bg-indigo-50 border-indigo-200'" class="p-5 rounded-2xl shadow-sm border-2">
+                    <span :class="results().netProjectProfit < 0 ? 'bg-rose-100 text-rose-700' : 'bg-indigo-100 text-indigo-700'" class="text-[10px] font-bold px-2 py-1 rounded-full uppercase">Post-Tax Project Net</span>
+                    <h3 class="text-xl font-black mt-2" x-text="formatCurrency(results().netProjectProfit)"></h3>
+                    <p class="text-xs text-slate-600 mt-1">
+                        After 30.3% Tax (<strong x-text="formatCurrency(results().totalTaxReserve)"></strong>) & Fixed
+                    </p>
+                </div>
+
+                <div class="p-5 rounded-2xl shadow-sm border-2 bg-amber-50/70 border-amber-200">
+                    <span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-1 rounded-full uppercase">4-Partner Split (Post-Tax)</span>
+                    <h3 class="text-xl font-black mt-2 text-slate-900" x-text="formatCurrency(results().partnerSplit)"></h3>
+                    <p class="text-xs text-slate-600 mt-1">
+                        Per Partner • Breakeven: <strong x-text="results().breakEvenUnits + ' units'"></strong>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Warnings Banner -->
+            <template x-if="results().warnings.length > 0">
+                <div class="bg-amber-50 border-l-4 border-amber-500 rounded-r-xl p-4">
+                    <div class="text-xs font-bold uppercase text-amber-800">Physical & Operational Warnings</div>
+                    <ul class="text-xs text-amber-700 mt-1 space-y-1">
+                        <template x-for="w in results().warnings" :key="w">
+                            <li x-text="'• ' + w"></li>
+                        </template>
+                    </ul>
+                </div>
+            </template>
+
+            <!-- Unit Cost Breakdown & Interactive Tooltips -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-6">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-xs font-bold uppercase tracking-widest text-slate-500">Unit Economics (Hover Any Metric for Formula)</h2>
+                    <span class="text-xs font-semibold text-slate-500">Gross Collected / Unit: <strong class="text-slate-900" x-text="'$' + results().grossUnitRev.toFixed(2)"></strong></span>
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-6 gap-4">
+                    <div class="p-3 rounded-xl bg-slate-50 border border-slate-100 cursor-help" :title="'Sum of Panda EXW prices at ' + qty + ' units'">
+                        <div class="text-[10px] text-slate-400 font-bold uppercase mb-1">Unit Mfg ⓘ</div>
+                        <div class="text-lg font-black text-slate-800" x-text="'$' + results().unitMfgCost.toFixed(2)"></div>
+                    </div>
+                    <div class="p-3 rounded-xl bg-slate-50 border border-slate-100 cursor-help" :title="'Mfg ($' + results().unitMfgCost.toFixed(2) + ') + 30% LCL Freight ($' + results().freight.toFixed(2) + ') + 20% US Tariff ($' + results().tariffs.toFixed(2) + ')'">
+                        <div class="text-[10px] text-slate-400 font-bold uppercase mb-1">Landed Cost ⓘ</div>
+                        <div class="text-lg font-black text-slate-800" x-text="'$' + results().landedCost.toFixed(2)"></div>
+                    </div>
+                    <div class="p-3 rounded-xl bg-slate-50 border border-slate-100 cursor-help" title="10% Kickstarter Platform (5%) + Stripe Payment Processing (~5%) on Pledge + Shipping">
+                        <div class="text-[10px] text-rose-500 font-bold uppercase mb-1">KS Fee (10%) ⓘ</div>
+                        <div class="text-lg font-black text-rose-500" x-text="'$' + results().ksFee.toFixed(2)"></div>
+                    </div>
+                    <div class="p-3 rounded-xl bg-slate-50 border border-slate-100 cursor-help" title="15% Contingency Buffer calculated on (Landed Cost + QML Fulfillment)">
+                        <div class="text-[10px] text-amber-600 font-bold uppercase mb-1">Contingency ⓘ</div>
+                        <div class="text-lg font-black text-amber-600" x-text="'$' + results().contingencyFee.toFixed(2)"></div>
+                    </div>
+                    <div class="p-3 rounded-xl bg-slate-50 border border-slate-100 cursor-help" title="30.3% Self-Employment & Federal Income Tax Reserve allocated per unit">
+                        <div class="text-[10px] text-sky-600 font-bold uppercase mb-1">Tax (30.3%) ⓘ</div>
+                        <div class="text-lg font-black text-sky-600" x-text="'$' + results().unitTaxReserve.toFixed(2)"></div>
+                    </div>
+                    <div class="p-3 rounded-xl bg-slate-50 border border-slate-100 cursor-help" title="Final Take-Home Profit per unit after Variable Costs, Fixed Overhead allocation, and 30.3% Tax Reserve">
+                        <div class="text-[10px] text-slate-400 font-bold uppercase mb-1">Take-Home / Unit ⓘ</div>
+                        <div class="text-lg font-black" :class="results().unitProfit < 0 ? 'text-rose-600' : 'text-emerald-600'" x-text="'$' + results().unitProfit.toFixed(2)"></div>
+                    </div>
+                </div>
+
+                <!-- Variable Cost Distribution Bar & Legend -->
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center text-xs font-bold text-slate-600 uppercase">
+                        <span>Variable Cost Distribution (Unit)</span>
+                        <span class="bg-slate-100 px-2.5 py-1 rounded text-slate-700 font-mono" x-text="'Total Variable: $' + results().totalVariableCost.toFixed(2)"></span>
+                    </div>
+                    <div class="h-4 w-full bg-slate-100 rounded-full flex overflow-hidden shadow-inner">
+                        <div class="bg-indigo-500 h-full transition-all" :style="'width: ' + (results().unitMfgCost/results().totalVariableCost*100) + '%'"></div>
+                        <div class="bg-sky-400 h-full transition-all" :style="'width: ' + (results().freight/results().totalVariableCost*100) + '%'"></div>
+                        <div class="bg-orange-400 h-full transition-all" :style="'width: ' + (results().tariffs/results().totalVariableCost*100) + '%'"></div>
+                        <div class="bg-emerald-400 h-full transition-all" :style="'width: ' + (results().fulfillment/results().totalVariableCost*100) + '%'"></div>
+                        <div class="bg-rose-400 h-full transition-all" :style="'width: ' + (results().ksFee/results().totalVariableCost*100) + '%'"></div>
+                        <div class="bg-amber-400 h-full transition-all" :style="'width: ' + (results().contingencyFee/results().totalVariableCost*100) + '%'"></div>
+                    </div>
+                    <div class="flex flex-wrap gap-x-6 gap-y-2 pt-1">
+                        <div class="flex items-center gap-2">
+                            <div class="w-2.5 h-2.5 rounded-full bg-indigo-500"></div>
+                            <span class="text-[10px] font-bold text-slate-500 uppercase">Mfg: <span class="text-slate-800" x-text="'$' + results().unitMfgCost.toFixed(2)"></span></span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-2.5 h-2.5 rounded-full bg-sky-400"></div>
+                            <span class="text-[10px] font-bold text-slate-500 uppercase">Freight (30%): <span class="text-slate-800" x-text="'$' + results().freight.toFixed(2)"></span></span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-2.5 h-2.5 rounded-full bg-orange-400"></div>
+                            <span class="text-[10px] font-bold text-slate-500 uppercase">Tariff (20%): <span class="text-slate-800" x-text="'$' + results().tariffs.toFixed(2)"></span></span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-2.5 h-2.5 rounded-full bg-emerald-400"></div>
+                            <span class="text-[10px] font-bold text-slate-500 uppercase">QML Fulfil: <span class="text-slate-800" x-text="'$' + results().fulfillment.toFixed(2)"></span></span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-2.5 h-2.5 rounded-full bg-rose-400"></div>
+                            <span class="text-[10px] font-bold text-slate-500 uppercase">KS Fee (10%): <span class="text-slate-800" x-text="'$' + results().ksFee.toFixed(2)"></span></span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-2.5 h-2.5 rounded-full bg-amber-400"></div>
+                            <span class="text-[10px] font-bold text-slate-500 uppercase text-amber-700">Contingency (15%): <span class="text-slate-800" x-text="'$' + results().contingencyFee.toFixed(2)"></span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dollar-for-Dollar P&L Waterfall Table & Cash Flow Milestones -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- P&L Waterfall -->
+                <div class="lg:col-span-8 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+                        <h2 class="text-xs font-bold uppercase tracking-widest text-slate-500">Complete Dollar-for-Dollar P&L Waterfall</h2>
+                        <span class="text-[10px] font-mono text-slate-400" x-text="qty.toLocaleString() + ' Units'"></span>
+                    </div>
+                    <div class="p-4 overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead>
+                                <tr class="text-[10px] text-slate-400 uppercase border-b border-slate-100">
+                                    <th class="pb-2">Line Item</th>
+                                    <th class="pb-2">Basis / Rate</th>
+                                    <th class="pb-2 text-right">Per Unit</th>
+                                    <th class="pb-2 text-right">Project Total</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-50">
+                                <tr class="font-semibold text-slate-800 bg-slate-50/60">
+                                    <td class="py-2.5">Gross Revenue Collected</td>
+                                    <td class="py-2.5 text-slate-500" x-text="'$' + pledgePrice.toFixed(2) + ' Pledge + $' + shippingCharge.toFixed(2) + ' Ship'"></td>
+                                    <td class="py-2.5 text-right" x-text="'$' + results().grossUnitRev.toFixed(2)"></td>
+                                    <td class="py-2.5 text-right" x-text="formatCurrency(results().grossProjectRev)"></td>
+                                </tr>
+                                <tr>
+                                    <td class="py-2 text-slate-600">Panda Manufacturing (EXW)</td>
+                                    <td class="py-2 text-slate-400">Quote SW25080 Tiered</td>
+                                    <td class="py-2 text-right text-rose-600" x-text="'-$' + results().unitMfgCost.toFixed(2)"></td>
+                                    <td class="py-2 text-right text-rose-600" x-text="'-' + formatCurrency(results().unitMfgCost * qty)"></td>
+                                </tr>
+                                <tr>
+                                    <td class="py-2 text-slate-600">Ocean Freight (LCL to Orlando)</td>
+                                    <td class="py-2 text-slate-400">30% of Mfg Cost</td>
+                                    <td class="py-2 text-right text-rose-600" x-text="'-$' + results().freight.toFixed(2)"></td>
+                                    <td class="py-2 text-right text-rose-600" x-text="'-' + formatCurrency(results().freight * qty)"></td>
+                                </tr>
+                                <tr>
+                                    <td class="py-2 text-slate-600">US Import Tariffs</td>
+                                    <td class="py-2 text-slate-400">20% of Mfg Cost</td>
+                                    <td class="py-2 text-right text-rose-600" x-text="'-$' + results().tariffs.toFixed(2)"></td>
+                                    <td class="py-2 text-right text-rose-600" x-text="'-' + formatCurrency(results().tariffs * qty)"></td>
+                                </tr>
+                                <tr>
+                                    <td class="py-2 text-slate-600">QML US Fulfillment</td>
+                                    <td class="py-2 text-slate-400" x-text="'$21.96 + $1.92 Fuel (' + results().effectiveSkus + ' SKU)'"></td>
+                                    <td class="py-2 text-right text-rose-600" x-text="'-$' + results().fulfillment.toFixed(2)"></td>
+                                    <td class="py-2 text-right text-rose-600" x-text="'-' + formatCurrency(results().fulfillment * qty)"></td>
+                                </tr>
+                                <tr>
+                                    <td class="py-2 text-slate-600">Kickstarter & Stripe Fees</td>
+                                    <td class="py-2 text-slate-400">10% of Gross Revenue</td>
+                                    <td class="py-2 text-right text-rose-600" x-text="'-$' + results().ksFee.toFixed(2)"></td>
+                                    <td class="py-2 text-right text-rose-600" x-text="'-' + formatCurrency(results().ksFee * qty)"></td>
+                                </tr>
+                                <tr>
+                                    <td class="py-2 text-slate-600">Contingency Buffer</td>
+                                    <td class="py-2 text-slate-400">15% on Landed + Fulfil</td>
+                                    <td class="py-2 text-right text-amber-600" x-text="'-$' + results().contingencyFee.toFixed(2)"></td>
+                                    <td class="py-2 text-right text-amber-600" x-text="'-' + formatCurrency(results().contingencyFee * qty)"></td>
+                                </tr>
+                                <tr>
+                                    <td class="py-2 text-slate-600">Fixed Tooling, Compliance & Loan</td>
+                                    <td class="py-2 text-slate-400">One-Time Project Overhead</td>
+                                    <td class="py-2 text-right text-rose-600" x-text="'-$' + (results().totalFixed / qty).toFixed(2)"></td>
+                                    <td class="py-2 text-right text-rose-600" x-text="'-' + formatCurrency(results().totalFixed)"></td>
+                                </tr>
+                                <tr class="font-semibold bg-slate-50">
+                                    <td class="py-2.5 text-slate-800">Operating Profit (Pre-Tax)</td>
+                                    <td class="py-2.5 text-slate-400">Before 30.3% Tax Reserve</td>
+                                    <td class="py-2.5 text-right" x-text="'$' + (results().projectNetPreTax / qty).toFixed(2)"></td>
+                                    <td class="py-2.5 text-right" x-text="formatCurrency(results().projectNetPreTax)"></td>
+                                </tr>
+                                <tr>
+                                    <td class="py-2 text-sky-700 font-medium">Tax Reserve (Self-Emp & Federal)</td>
+                                    <td class="py-2 text-sky-600">30.3% of Operating Profit</td>
+                                    <td class="py-2 text-right text-sky-700" x-text="'-$' + results().unitTaxReserve.toFixed(2)"></td>
+                                    <td class="py-2 text-right text-sky-700" x-text="'-' + formatCurrency(results().totalTaxReserve)"></td>
+                                </tr>
+                                <tr class="font-black text-slate-900 bg-emerald-50/70">
+                                    <td class="py-3">FINAL TAKE-HOME PROFIT</td>
+                                    <td class="py-3 text-emerald-700" x-text="formatCurrency(results().partnerSplit) + ' / partner (x4)'"></td>
+                                    <td class="py-3 text-right text-emerald-700" x-text="'$' + results().unitProfit.toFixed(2)"></td>
+                                    <td class="py-3 text-right text-emerald-700" x-text="formatCurrency(results().netProjectProfit)"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Cash Flow Milestones & Fixed Cost Audit -->
+                <div class="lg:col-span-4 space-y-6">
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 space-y-4">
+                        <h3 class="text-xs font-bold uppercase tracking-widest text-slate-500">Panda Cash Flow Milestones</h3>
+                        <div class="space-y-3 text-xs">
+                            <div class="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                                <div class="text-[10px] font-bold text-slate-400 uppercase">1. Contract Signing (Deposit)</div>
+                                <div class="text-base font-black text-slate-800 mt-0.5" x-text="formatCurrency(results().depositAtSigning)"></div>
+                                <div class="text-[10px] text-slate-500">50% Mfg Deposit + 100% Tooling</div>
+                            </div>
+                            <div class="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                                <div class="text-[10px] font-bold text-slate-400 uppercase">2. MPC Approval & Port Arrival</div>
+                                <div class="text-base font-black text-slate-800 mt-0.5" x-text="formatCurrency(results().dueAtMPC)"></div>
+                                <div class="text-[10px] text-slate-500">50% Mfg Balance + 30% Freight + 20% Tariff</div>
+                            </div>
+                            <div class="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                                <div class="text-[10px] font-bold text-slate-400 uppercase">3. QML US Fulfillment Wave</div>
+                                <div class="text-base font-black text-slate-800 mt-0.5" x-text="formatCurrency(results().fulfillment * qty)"></div>
+                                <div class="text-[10px] text-slate-500">Billed prior to backer parcel dispatch</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 space-y-3">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-xs font-bold uppercase tracking-widest text-slate-500">Active Fixed Costs</h3>
+                            <span class="text-xs font-black text-slate-800" x-text="formatCurrency(results().totalFixed)"></span>
+                        </div>
+                        <div class="divide-y divide-slate-100 text-xs">
+                            <template x-for="f in results().activeFixedBreakdown" :key="f.name">
+                                <div class="py-2 flex justify-between items-center" :title="f.desc">
+                                    <span class="text-slate-600 truncate pr-2" x-text="f.name"></span>
+                                    <span class="font-mono font-bold text-slate-800" x-text="'$' + f.cost"></span>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Physical Manifest & 2D Box Footprint + Stacked Side Elevation -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+                    <h2 class="text-xs font-bold uppercase tracking-widest text-slate-500">Physical Manifest & Geometric Primitives</h2>
+                    <div class="text-[10px] font-bold text-slate-500 uppercase">
+                        Stacked Height: <span :class="results().stackedHeight > boxH ? 'text-rose-600' : 'text-emerald-600'" x-text="results().stackedHeight + 'mm'"></span> / <span x-text="boxH + 'mm'"></span>
+                    </div>
                 </div>
                 
-                <!-- Distribution Legend -->
-                <div class="flex flex-wrap gap-x-6 gap-y-2 mt-2">
-                    <div class="flex items-center gap-2">
-                        <div class="w-2 h-2 rounded-full bg-indigo-500"></div>
-                        <span class="text-[10px] font-bold text-slate-500 uppercase">Mfg: <span class="text-slate-800" x-text="'$' + results().unitMfgCost.toFixed(2)"></span></span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <div class="w-2 h-2 rounded-full bg-sky-400"></div>
-                        <span class="text-[10px] font-bold text-slate-500 uppercase">Freight: <span class="text-slate-800" x-text="'$' + results().freight.toFixed(2)"></span></span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <div class="w-2 h-2 rounded-full bg-orange-400"></div>
-                        <span class="text-[10px] font-bold text-slate-500 uppercase">Tariff: <span class="text-slate-800" x-text="'$' + results().tariffs.toFixed(2)"></span></span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <div class="w-2 h-2 rounded-full bg-emerald-400"></div>
-                        <span class="text-[10px] font-bold text-slate-500 uppercase">Fulfil: <span class="text-slate-800" x-text="'$' + results().fulfillment.toFixed(2)"></span></span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <div class="w-2 h-2 rounded-full bg-rose-400"></div>
-                        <span class="text-[10px] font-bold text-slate-500 uppercase">KS Fee: <span class="text-slate-800" x-text="'$' + results().ksFee.toFixed(2)"></span></span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <div class="w-2 h-2 rounded-full bg-amber-400"></div>
-                        <span class="text-[10px] font-bold text-slate-500 uppercase text-amber-600">Cont: <span class="text-slate-800" x-text="'$' + results().contingencyFee.toFixed(2)"></span></span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Project Totals -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
-                    <div class="text-[10px] text-slate-500 font-bold uppercase mb-1">Total Fixed Costs</div>
-                    <div class="text-lg font-black text-slate-800" x-text="'$' + results().totalFixed.toLocaleString()"></div>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
-                    <div class="text-[10px] text-sky-600 font-bold uppercase mb-1">Tax Reserve (30.3%)</div>
-                    <div class="text-lg font-black text-sky-700" x-text="'$' + results().totalTaxReserve.toLocaleString(undefined, {maximumFractionDigits:0})"></div>
-                </div>
-                <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
-                    <div class="text-[10px] text-slate-500 font-bold uppercase mb-1">Project Variable Costs</div>
-                    <div class="text-lg font-black text-slate-800" x-text="'$' + (results().totalVariableCost * qty).toLocaleString(undefined, {maximumFractionDigits:0})"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Physical Manifest & Visualization -->
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-            <div class="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
-                <h2 class="text-xs font-bold uppercase tracking-widest text-slate-500">Physical Manifest & Fit Diagnostic</h2>
-                <div class="text-[10px] font-bold text-slate-400 uppercase">
-                    Stacked Height: <span :class="results().stackedHeight > boxH ? 'text-rose-600' : 'text-slate-600'" x-text="results().stackedHeight + 'mm'"></span> / <span x-text="boxH + 'mm'"></span>
-                </div>
-            </div>
-            
-            <div class="p-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
-                <!-- Data Table -->
-                <div class="lg:col-span-7 overflow-x-auto">
-                    <table class="w-full text-left text-[11px]">
-                        <thead>
-                            <tr class="text-slate-400 uppercase tracking-tighter border-b border-slate-100">
-                                <th class="pb-2 font-bold">Item</th>
-                                <th class="pb-2 font-bold">Dims (mm)</th>
-                                <th class="pb-2 font-bold text-right">Weight</th>
-                                <th class="pb-2 font-bold text-center">Fit</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-50">
-                            <template x-for="item in results().manifest" :key="item.name">
-                                <tr>
-                                    <td class="py-3 font-semibold flex items-center gap-2 text-slate-700">
-                                        <div class="w-2 h-2 rounded-full" :style="'background-color: ' + item.color"></div>
-                                        <span x-text="item.name"></span>
-                                    </td>
-                                    <td class="py-3 font-mono text-slate-500" x-text="item.dims"></td>
-                                    <td class="py-3 text-right text-slate-600" x-text="item.weight"></td>
-                                    <td class="py-3 text-center">
-                                        <span x-show="item.fits" class="text-emerald-500">✓</span>
-                                        <span x-show="!item.fits" class="text-rose-500 font-bold">FAIL</span>
-                                    </td>
+                <div class="p-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    <!-- Manifest Table -->
+                    <div class="lg:col-span-7 overflow-x-auto">
+                        <table class="w-full text-left text-[11px]">
+                            <thead>
+                                <tr class="text-slate-400 uppercase tracking-tighter border-b border-slate-100">
+                                    <th class="pb-2 font-bold">Component</th>
+                                    <th class="pb-2 font-bold">Dims (mm)</th>
+                                    <th class="pb-2 font-bold text-right">Weight</th>
+                                    <th class="pb-2 font-bold text-center">Fit Check</th>
                                 </tr>
-                            </template>
-                        </tbody>
-                        <tfoot>
-                            <tr class="border-t-2 border-slate-100 font-bold text-slate-900">
-                                <td class="pt-3">TOTAL PACKAGE</td>
-                                <td class="pt-3">Stacked: <span x-text="results().stackedHeight + 'mm'"></span></td>
-                                <td class="pt-3 text-right" x-text="results().totalWeightLbs.toFixed(2) + ' lbs'"></td>
-                                <td></td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
+                            </thead>
+                            <tbody class="divide-y divide-slate-50">
+                                <template x-for="item in results().manifest" :key="item.name">
+                                    <tr>
+                                        <td class="py-2.5 font-semibold flex items-center gap-2 text-slate-700">
+                                            <div class="w-2.5 h-2.5 rounded-full shrink-0" :style="'background-color: ' + item.color"></div>
+                                            <span x-text="item.name"></span>
+                                        </td>
+                                        <td class="py-2.5 font-mono text-slate-500" x-text="item.dims"></td>
+                                        <td class="py-2.5 text-right text-slate-600" x-text="item.weight"></td>
+                                        <td class="py-2.5 text-center">
+                                            <span x-show="item.fits" class="text-emerald-600 font-bold">✓ PASS</span>
+                                            <span x-show="!item.fits" class="text-rose-600 font-bold">FAIL</span>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                            <tfoot>
+                                <tr class="border-t-2 border-slate-100 font-bold text-slate-900">
+                                    <td class="pt-3">TOTAL PACKAGE</td>
+                                    <td class="pt-3 font-mono" x-text="'Stack: ' + results().stackedHeight + 'mm'"></td>
+                                    <td class="pt-3 text-right" x-text="results().totalWeightLbs.toFixed(2) + ' lbs (' + results().totalWeightKg.toFixed(2) + ' kg)'"></td>
+                                    <td class="pt-3 text-center" :class="results().isOverfilled ? 'text-rose-600' : 'text-emerald-600'" x-text="results().isOverfilled ? 'OVERFLOW' : 'OK'"></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
 
-                <!-- Visualization -->
-                <div class="lg:col-span-5 bg-slate-50 rounded-xl p-4 flex flex-col items-center justify-center">
-                    <div class="text-[10px] font-bold text-slate-400 uppercase mb-3">2D Box Footprint Visualization</div>
-                    <div class="relative border-2 border-slate-300 bg-white shadow-inner" 
-                         :style="`width: 200px; height: 200px;` ">
-                        <template x-for="item in results().manifest">
-                            <div class="absolute opacity-40 border border-black/10"
-                                 :style="`
-                                    left: 0; 
-                                    top: 0; 
-                                    width: ${Math.min(100, (item.l / boxL) * 100)}%; 
-                                    height: ${Math.min(100, (item.w / boxW) * 100)}%;
-                                    background-color: ${item.color};
-                                 `"
-                                 :title="item.name">
+                    <!-- Dual Geometric Primitives: Top-Down Footprint + Side Stack -->
+                    <div class="lg:col-span-5 bg-slate-50 rounded-xl p-4 flex flex-col justify-between">
+                        <div class="grid grid-cols-2 gap-4 items-center">
+                            <!-- Top-Down Footprint -->
+                            <div class="flex flex-col items-center">
+                                <div class="text-[10px] font-bold text-slate-400 uppercase mb-2">Top-Down Footprint</div>
+                                <div class="relative border-2 border-slate-400 bg-white shadow-inner overflow-hidden" style="width: 150px; height: 150px;">
+                                    <template x-for="item in results().manifest" :key="item.name">
+                                        <div x-show="item.l > 0" class="absolute opacity-45 border border-black/20"
+                                             :style="`left: 0; top: 0; width: ${Math.min(100, (item.l / boxL) * 100)}%; height: ${Math.min(100, (item.w / boxW) * 100)}%; background-color: ${item.color};`"
+                                             :title="item.name + ' (' + item.dims + ')'">
+                                        </div>
+                                    </template>
+                                </div>
+                                <span class="text-[10px] font-mono text-slate-500 mt-1.5" x-text="boxL + 'x' + boxW + 'mm'"></span>
                             </div>
-                        </template>
-                    </div>
-                    <div class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 w-full">
-                        <div class="text-[9px] text-slate-400 uppercase">Box Size: <span class="text-slate-700 font-bold" x-text="boxL + 'x' + boxW"></span></div>
-                        <div class="text-[9px] text-slate-400 uppercase text-right">Max Stack: <span class="text-slate-700 font-bold" x-text="boxH"></span></div>
+
+                            <!-- Side Stack Depth -->
+                            <div class="flex flex-col items-center">
+                                <div class="text-[10px] font-bold text-slate-400 uppercase mb-2">Vertical Stack Depth</div>
+                                <div class="relative border-2 border-slate-400 bg-white shadow-inner flex flex-col-reverse justify-start overflow-hidden" style="width: 80px; height: 150px;">
+                                    <template x-for="item in results().manifest" :key="item.name">
+                                        <div x-show="item.h > 0" class="w-full border-t border-black/20 transition-all"
+                                             :style="`height: ${(item.h / boxH) * 100}%; background-color: ${item.color};`"
+                                             :title="item.name + ' (' + item.h + 'mm tall)'">
+                                        </div>
+                                    </template>
+                                </div>
+                                <span class="text-[10px] font-mono text-slate-500 mt-1.5" x-text="results().stackedHeight + ' / ' + boxH + 'mm'"></span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Footnote -->
-        <div class="p-6 bg-indigo-50 border border-indigo-100 rounded-2xl">
-            <h4 class="text-sm font-bold text-indigo-900 mb-1">Compliance & Tax Note</h4>
-            <p class="text-xs text-indigo-800 leading-relaxed">
-                Profit analysis now includes a <span class="font-bold">30.3% Reserve</span> for Federal Income and Self-Employment Tax. 
-                This ensures the 4-employee team is protected from individual tax liability at year-end.
-                Total fulfillment cost is <span class="font-bold">$23.88</span>; charging <span class="font-bold" x-text="'$' + shippingCharge.toFixed(2)"></span> 
-                results in a subsidy of <span class="font-bold" x-text="formatCurrency(results().subsidy)"></span> per package.
-            </p>
-        </div>
-
-        <!-- Achievement Tiers Diagnostic -->
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4">
-            <h2 class="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-4 px-2">Diagnostic: Achievement Tiers</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                <template x-for="item in results().tiersAchieved" :key="item.name">
-                    <div class="p-3 rounded-lg bg-slate-50 border border-slate-100">
-                        <div class="text-[9px] font-bold text-slate-400 uppercase truncate" x-text="item.name"></div>
-                        <div class="text-indigo-600 font-black text-sm mt-1" x-text="item.tier + '+ units'"></div>
-                        <div class="text-[10px] font-medium text-slate-500" x-text="'Price: $' + item.price.toFixed(2)"></div>
-                    </div>
-                </template>
+            <!-- QML Shipping & Compliance Footnote -->
+            <div class="p-5 bg-indigo-50 border border-indigo-100 rounded-2xl text-xs text-indigo-900 space-y-1">
+                <div class="font-bold">QML Fulfillment & Tax Reserve Footnote</div>
+                <p class="text-indigo-800 leading-relaxed">
+                    Per Quartermaster Logistics (QML) 2026 US Fulfillment Estimate: Continental US shipping for a 4 lb parcel (14×14×6") is <strong>$21.96 Base + $1.92 Fuel Surcharge = $23.88</strong> (includes up to 3 SKUs; $0.25 per additional SKU). Charging backers <strong x-text="'$' + shippingCharge.toFixed(2)"></strong> results in a net shipping subsidy of <strong x-text="formatCurrency(results().subsidy)"></strong> per unit. Operating profits are further buffered by a <strong>30.3% Tax Reserve</strong> so all 4 partners are protected against Self-Employment and Federal Income Tax liabilities.
+                </p>
             </div>
-        </div>
-    </main>
+
+            <!-- Diagnostic: Achievement Tiers -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4">
+                <h2 class="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-3 px-1">Diagnostic: Panda Quote SW25080 Achievement Tiers</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                    <template x-for="item in results().tiersAchieved" :key="item.name">
+                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                            <div class="text-[9px] font-bold text-slate-400 uppercase truncate" x-text="item.name"></div>
+                            <div class="text-indigo-600 font-black text-sm mt-0.5" x-text="item.tier + '+ units'"></div>
+                            <div class="text-[11px] font-semibold text-slate-700" x-text="'Unit Price: $' + item.price.toFixed(2)"></div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </main>
+    </div>
 </div>
 
 </body>
